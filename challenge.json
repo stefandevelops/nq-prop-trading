@@ -1,0 +1,50 @@
+{
+  "_help": "IQ Capital Futures Core 50K, Position Loss version, from iqcapital.io (checked 12 Oct 2026). 30 days, extendable by 30 days for $19 as often as needed. Commissions are estimates: check your platform statement.",
+  "_position_loss_help": "No single position may lose $500 (1%) or more including costs: 2 soft breaches, the 3rd closes the account. Not modelled by the simulators; keep planned risk at $450 or less so it never triggers.",
+  "_alternative": "Daily Loss version ($49): max_drawdown 2000, daily_loss_limit 1000, no position loss rule.",
+  "rules_version": 4,
+
+  "firm": "IQ Capital",
+  "account": "Futures Core 50K (Position Loss)",
+  "challenge_fee": 39,
+
+  "starting_balance": 50000,
+  "profit_target": 3000,
+  "max_drawdown": 3000,
+  "position_loss_limit": 500,
+
+  "_drawdown_type_help": "static | eod_trailing | intraday_trailing",
+  "drawdown_type": "eod_trailing",
+  "_trail_lock_help": "Balance at which the trailing threshold stops moving up. IQ Capital: trails until the starting balance, then stays fixed.",
+  "trail_lock_balance": 50000,
+
+  "_daily_loss_help": "None on the Position Loss version. (Daily Loss version: $1,000 soft breach, modelled as 'stop for the day'.)",
+  "daily_loss_limit": null,
+  "daily_loss_limit_hard_fail": false,
+
+  "_consistency_help": "No consistency rule during the challenge (30% best-day rule applies once funded).",
+  "consistency_pct": null,
+  "min_trading_days": 0,
+
+  "max_contracts": { "NQ": 5, "MNQ": 50 },
+
+  "_costs_help": "Round-turn commission + fees per contract (estimate), and slippage in ticks per round turn.",
+  "costs": {
+    "NQ":  { "commission_rt": 4.50, "slippage_ticks": 1 },
+    "MNQ": { "commission_rt": 1.30, "slippage_ticks": 1 }
+  },
+
+  "_plan_help": "Your trading plan (PLAYBOOK.md sections 15-18): MNQ, $350 flat risk, 50-point structure stops, IB/ORB breakouts at about 1.5R and 50% wins. max_days 63 = about 3 months (two $19 extensions); extend rather than raise risk.",
+  "plan": {
+    "contract": "MNQ",
+    "risk_per_trade": 350,
+    "stop_points": 50,
+    "reward_risk": 1.5,
+    "win_rate": 0.50,
+    "max_trades_per_day": 3,
+    "max_losses_per_day": 2,
+    "daily_loss_stop": 700,
+    "daily_profit_goal": 1050,
+    "max_days": 63
+  }
+}

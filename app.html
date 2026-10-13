@@ -1,0 +1,1198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prop Challenge Toolkit</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #161a21; --line: #262c36; --text: #e6e8eb; --muted: #8b93a1;
+    --accent: #4f8cff; --good: #3fb27f; --bad: #e5534b; --warn: #d4a72c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; border-bottom: 1px solid var(--line); }
+  h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  .sub { color: var(--muted); font-size: 12px; }
+  nav button { background: none; border: none; color: var(--muted); padding: 8px 14px; font: inherit; cursor: pointer; border-bottom: 2px solid transparent; }
+  nav button.active { color: var(--text); border-bottom-color: var(--accent); }
+  main { padding: 20px 24px; max-width: 1240px; margin: 0 auto; }
+  .tab { display: none; } .tab.active { display: block; }
+  .grid { display: grid; grid-template-columns: 330px 1fr; gap: 20px; align-items: start; }
+  .stack { display: flex; flex-direction: column; gap: 20px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 12px; font-weight: 600; }
+  h3 { font-size: 12px; color: var(--muted); margin: 16px 0 8px; font-weight: 600; }
+  h3:first-child { margin-top: 0; }
+  .field { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 7px; }
+  .field label { color: var(--muted); font-size: 13px; }
+  .field input, .field select { width: 130px; background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 5px; padding: 5px 8px; font: inherit; text-align: right; }
+  .field select { text-align: left; }
+  .field input[type=checkbox] { width: auto; }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+  .banner { border: 1px solid var(--line); border-left: 3px solid var(--warn); padding: 8px 12px; border-radius: 6px; color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .stat { background: var(--panel); padding: 14px 16px; }
+  .stat .k { color: var(--muted); font-size: 12px; }
+  .stat .v { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat.hero .v { font-size: 24px; color: var(--accent); }
+  .kv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 24px; margin-top: 16px; }
+  .kv div { display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+  .kv span:first-child { color: var(--muted); }
+  .kv.one { grid-template-columns: 1fr; gap: 6px; margin-top: 10px; }
+  .num { font-variant-numeric: tabular-nums; }
+  .good { color: var(--good); } .bad { color: var(--bad); } .warn { color: var(--warn); } .muted { color: var(--muted); }
+  .note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .msg { margin-top: 12px; font-size: 13px; }
+  .btn { display: inline-block; background: var(--accent); color: #fff; border: none; border-radius: 5px; padding: 6px 14px; font: inherit; cursor: pointer; }
+  .btn.ghost { background: none; border: 1px solid var(--line); color: var(--text); }
+  .btn.small { padding: 3px 10px; font-size: 12px; }
+  select.btn.ghost { background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 5px; padding: 6px 10px; font: inherit; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  canvas { width: 100%; height: 320px; display: block; }
+  canvas.short { height: 220px; }
+  table.list { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 13px; }
+  table.list th { color: var(--muted); font-weight: 500; text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.list td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.list th:first-child, table.list td:first-child, table.list td.l, table.list th.l { text-align: left; }
+  table.list tr.best td { color: var(--accent); }
+  table.list td.notes { max-width: 220px; overflow: hidden; text-overflow: ellipsis; color: var(--muted); text-align: left; }
+  .del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 15px; }
+  .del:hover { color: var(--bad); }
+  .link { color: var(--accent); cursor: pointer; background: none; border: none; font: inherit; padding: 0; }
+  .drop { border: 1px dashed var(--line); border-radius: 6px; padding: 16px; text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  .drop.over { border-color: var(--accent); color: var(--text); }
+  .tag { font-size: 11px; color: var(--warn); margin-left: 4px; }
+  tr.editing td { background: var(--bg); }
+  .scroll { overflow-x: auto; }
+  textarea.notes { width: 100%; height: auto; margin-top: 4px; font: inherit; }
+  table.heat { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  table.heat th, table.heat td { padding: 7px 8px; text-align: center; font-size: 13px; }
+  table.heat th { color: var(--muted); font-weight: 500; }
+  table.heat td { border: 1px solid var(--bg); }
+  table.heat td.cur { outline: 2px solid var(--accent); outline-offset: -2px; }
+  #json { height: 260px; }
+  textarea { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: 12px/1.4 ui-monospace, Menlo, monospace; padding: 10px; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .legend i { display: inline-block; width: 10px; height: 2px; vertical-align: middle; margin-right: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Prop Challenge Toolkit</h1>
+    <div class="sub" id="subtitle"></div>
+  </div>
+  <nav>
+    <button data-tab="journal" class="active">Trade journal</button>
+    <button data-tab="sim">Simulator</button>
+    <button data-tab="rules">Challenge rules</button>
+  </nav>
+</header>
+
+<main>
+  <div class="banner">Rules are set to IQ Capital Futures Core 50K (Position Loss version, $39). Its "no position may lose $500+" rule isn't simulated: keep planned risk at $450 or less. Commissions are estimates: check them, and any rule changes, in <b>Challenge rules</b>. Settings are saved in this browser.</div>
+
+  <section class="tab active" id="tab-journal">
+    <div class="grid">
+      <div class="panel">
+        <h2>Import from DeepCharts</h2>
+        <div id="dropzone" class="drop">Drop your DeepCharts CSV here<br>or <label class="link">choose a file<input type="file" id="import" accept=".csv,.txt,text/csv" hidden></label></div>
+        <div id="imp-msg" class="note" style="margin:0 0 8px"></div>
+        <details>
+          <summary class="muted" style="cursor:pointer;font-size:13px;margin-bottom:8px">How to export, and import settings</summary>
+          <p class="note" style="margin-top:0">In DeepCharts: <b>Trading → Strategy Report</b>, pick your account and dates, <b>Generate Report</b>, open the <b>Trade List</b> tab, then <b>Export CSV</b>. Re-importing overlapping dates is fine: duplicates are skipped.</p>
+          <div class="field"><label>Times in the file are</label><select id="imp-tz"><option value="Europe/London">UK time</option><option value="America/New_York">New York time</option><option value="UTC">UTC</option></select></div>
+          <div class="field"><label>Dates in the file are</label><select id="imp-datefmt"><option value="dmy">DD/MM/YYYY</option><option value="mdy">MM/DD/YYYY</option></select></div>
+          <div class="field"><label>Placeholder stop (points)</label><input id="imp-stop" type="number" step="0.25" min="0.25"></div>
+          <div class="field"><label>Combine partial exits</label><input id="imp-merge" type="checkbox"></div>
+          <p class="note">The export has no stop prices, so imported trades get the placeholder stop and are marked for review. Edit each one to set the setup, real stop and whether you followed your rules. MFE and MAE come from DeepCharts' Run-up and DrawDown, which only cover the time you were in the trade.</p>
+        </details>
+
+        <h2 id="form-title" style="margin-top:20px">Log a trade manually</h2>
+        <form id="trade-form" autocomplete="off">
+          <div class="field"><label>Date</label><input name="date" type="date" required></div>
+          <div class="field"><label>Time (ET)</label><input name="time" type="time"></div>
+          <div class="field"><label>Setup</label><select name="setup">
+            <option>IB breakout (acceptance)</option><option>ORB 15m</option><option>Absorption reversal</option><option>Value area rotation</option>
+            <option>Failed auction</option><option>Trend pullback (LVN)</option><option>Other</option><option>Unreviewed</option>
+          </select></div>
+          <div class="field"><label title="Big trades printing in the candle body (not the wick), delta agreeing with the trade, aggression at the level">Order-flow confirmation</label><select name="confirm">
+            <option value="">Not recorded</option><option value="yes">Yes: big trades in body, delta agrees</option><option value="partial">Partial</option><option value="no">No: took it without confirmation</option>
+          </select></div>
+          <div class="field"><label>Day type</label><select name="dayType">
+            <option value="">Not recorded</option><option value="trend">Trend (one side won the open)</option><option value="balance">Balance (rotating inside range)</option>
+          </select></div>
+          <div class="field"><label>Side</label><select name="side"><option>Long</option><option>Short</option></select></div>
+          <div class="field"><label>Contract</label><select name="contract"><option>MNQ</option><option>NQ</option></select></div>
+          <div class="field"><label>Contracts</label><input name="qty" type="number" min="1" step="1" value="1" required></div>
+          <div class="field"><label>Entry price</label><input name="entry" type="number" step="0.25" required></div>
+          <div class="field"><label>Stop price</label><input name="stop" type="number" step="0.25" required></div>
+          <div class="field"><label>Average exit price</label><input name="exit" type="number" step="0.25" required></div>
+          <h3>Excursion, in points from entry</h3>
+          <div class="field"><label>Max move in favor (MFE)</label><input name="mfe" type="number" step="0.25" min="0"></div>
+          <div class="field"><label>Max move against (MAE)</label><input name="mae" type="number" step="0.25" min="0"></div>
+          <div class="field"><label>Followed my rules</label><input name="rules" type="checkbox" checked></div>
+          <div class="field" style="display:block"><label>Notes</label><textarea name="notes" rows="2" class="notes"></textarea></div>
+          <div class="row" style="margin-top:6px">
+            <button class="btn" type="submit" id="form-submit">Add trade</button>
+            <button class="btn ghost" type="button" id="form-cancel" style="display:none">Cancel</button>
+            <span id="form-msg" class="bad" style="font-size:12px"></span>
+          </div>
+        </form>
+        <p class="note"><b>MFE</b> is how far price went in your favor before it would have hit your <i>original</i> stop, even if you exited earlier. Check the chart after the trade. This is what shows which R target fits your entries.</p>
+        <h3>Backup</h3>
+        <div class="row">
+          <button class="btn ghost small" id="export">Export journal CSV</button>
+          <button class="btn ghost small" id="clear-all">Delete all trades</button>
+        </div>
+        <p class="note">Journal backups can be imported back through the same drop area above.</p>
+      </div>
+      <div class="stack">
+        <div class="panel">
+          <div class="stats" id="j-stats"></div>
+          <div class="kv num" id="j-kv"></div>
+          <div class="msg" id="j-msg"></div>
+        </div>
+        <div id="j-detail" class="stack">
+          <div class="panel">
+            <h2>Which target fits your entries</h2>
+            <div id="j-targets"></div>
+          </div>
+          <div class="panel">
+            <h2>Results by setup</h2>
+            <div id="j-setups"></div>
+          </div>
+          <div class="panel">
+            <h2>Does order-flow confirmation help?</h2>
+            <div id="j-confirm"></div>
+          </div>
+          <div class="panel">
+            <h2>Cumulative result in R</h2>
+            <canvas id="j-chart" class="short"></canvas>
+            <div class="note">Running total of R (profit or loss as a multiple of the risk taken), in date and time order.</div>
+          </div>
+          <div class="panel">
+            <h2>Trades</h2>
+            <div class="scroll" id="j-trades"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-sim">
+    <div class="grid">
+      <div class="panel">
+        <h2>Trading plan</h2>
+        <div class="field"><label>Simulate from</label><select id="sim-source">
+          <option value="stats">Coin-flip stats</option><option value="journal">My journal trades</option>
+        </select></div>
+        <div id="plan-stat-fields"></div>
+        <div id="journal-src" style="display:none">
+          <div class="field"><label>Setup</label><select id="sim-setup"></select></div>
+          <div class="field"><label>Only trades where I followed my rules</label><input type="checkbox" id="sim-rules-only"></div>
+          <div class="field"><label>Apply my daily rules to replayed days</label><input type="checkbox" id="sim-apply-daily"></div>
+          <div class="kv one num" id="journal-sample"></div>
+          <p class="note">Each simulated challenge is built from your real trading days, picked at random (a day can repeat), with each day's trades replayed in their real order and real dollar P&amp;L after costs.</p>
+        </div>
+        <div id="plan-daily-fields"></div>
+        <div class="field"><label>Simulations</label><input id="sims" type="number" value="10000" step="1000" min="500"></div>
+        <div class="row" style="margin-top:12px"><button class="btn" id="run">Run simulation</button></div>
+      </div>
+      <div class="stack">
+        <div class="panel">
+          <div class="stats">
+            <div class="stat hero"><div class="k">Pass</div><div class="v" id="s-pass"></div></div>
+            <div class="stat"><div class="k">Fail</div><div class="v" id="s-fail"></div></div>
+            <div class="stat"><div class="k">Still alive at day limit</div><div class="v" id="s-timeout"></div></div>
+          </div>
+          <div class="kv num" id="sim-kv"></div>
+          <div class="msg" id="sim-msg"></div>
+        </div>
+        <div class="panel">
+          <h2>Sample account balance paths</h2>
+          <canvas id="chart"></canvas>
+          <div class="legend">
+            <span><i style="background:var(--good)"></i>Passed</span>
+            <span><i style="background:var(--bad)"></i>Failed</span>
+            <span><i style="background:var(--muted)"></i>Still alive</span>
+            <span><i style="background:var(--accent)"></i>Profit target</span>
+            <span><i style="background:var(--warn)"></i>Starting fail level</span>
+          </div>
+          <div class="note" id="chart-note"></div>
+        </div>
+        <div class="panel" id="sweep-panel">
+          <div class="row" style="justify-content:space-between;margin-bottom:12px">
+            <h2 style="margin:0">Pass rate grid</h2>
+            <div class="row">
+              <select id="sweep-kind" class="btn ghost">
+                <option value="risk">Win rate vs risk per trade</option>
+                <option value="rr">Win rate vs reward : risk</option>
+              </select>
+              <button class="btn" id="sweep-run">Run grid</button>
+            </div>
+          </div>
+          <div id="sweep"><p class="muted">Shows pass rate for a range of win rates, keeping the rest of your plan fixed. The outlined cell is closest to your current plan.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-rules">
+    <div class="grid">
+      <div class="panel">
+        <h2>Challenge rules</h2>
+        <div id="rule-fields"></div>
+        <div class="row" style="margin-top:14px"><button class="btn ghost" id="reset">Reset to defaults</button></div>
+      </div>
+      <div class="panel">
+        <h2>Export for the Python scripts</h2>
+        <p class="note" style="margin-top:0">Paste this into <code>challenge.json</code> to keep <code>sizer.py</code> and <code>montecarlo.py</code> in sync with these settings.</p>
+        <textarea id="json" readonly></textarea>
+        <div class="row" style="margin-top:10px"><button class="btn" id="copy">Copy JSON</button><span class="muted" id="copied"></span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const DEFAULTS = {
+  rules_version: 4,
+  firm: "IQ Capital", account: "Futures Core 50K (Position Loss)", challenge_fee: 39,
+  starting_balance: 50000, profit_target: 3000, max_drawdown: 3000,
+  drawdown_type: "eod_trailing", trail_lock_balance: 50000,
+  daily_loss_limit: null, daily_loss_limit_hard_fail: false,
+  consistency_pct: null, min_trading_days: 0,
+  max_contracts: { NQ: 5, MNQ: 50 },
+  costs: { NQ: { commission_rt: 4.5, slippage_ticks: 1 }, MNQ: { commission_rt: 1.3, slippage_ticks: 1 } },
+  plan: {
+    contract: "MNQ", risk_per_trade: 350, stop_points: 50, reward_risk: 1.5, win_rate: 0.5,
+    max_trades_per_day: 3, max_losses_per_day: 2, daily_loss_stop: 700, daily_profit_goal: 1050, max_days: 63,
+  },
+};
+const STORE_KEY = "propToolkit.v1";
+const CONTRACTS = { NQ: { pv: 20, tick: 0.25 }, MNQ: { pv: 2, tick: 0.25 } };
+
+const clone = (o) => JSON.parse(JSON.stringify(o));
+function deepMerge(a, b) {
+  for (const k in b) {
+    if (b[k] && typeof b[k] === "object" && a[k] && typeof a[k] === "object") deepMerge(a[k], b[k]);
+    else a[k] = b[k];
+  }
+  return a;
+}
+function loadCfg() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (s && s.rules_version === DEFAULTS.rules_version) return deepMerge(clone(DEFAULTS), s);
+    if (s) return clone(DEFAULTS);
+  } catch (e) {}
+  return clone(DEFAULTS);
+}
+let cfg = loadCfg();
+const save = () => localStorage.setItem(STORE_KEY, JSON.stringify(cfg));
+const getPath = (o, p) => p.split(".").reduce((x, k) => x?.[k], o);
+function setPath(o, p, v) { const ks = p.split("."); const last = ks.pop(); ks.reduce((x, k) => x[k], o)[last] = v; }
+
+const money = (v, d = 0) => (v < 0 ? "-$" : "$") + Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = (v, d = 0) => (100 * v).toFixed(d) + "%";
+const $ = (id) => document.getElementById(id);
+
+// ---- Core model (mirrors common.py / montecarlo.py) ----
+const tickValue = (s) => CONTRACTS[s].pv * CONTRACTS[s].tick;
+const costPer = (s) => cfg.costs[s].commission_rt + cfg.costs[s].slippage_ticks * tickValue(s);
+function sizePosition(s, risk, stop) {
+  const per = stop * CONTRACTS[s].pv + costPer(s);
+  return Math.max(0, Math.min(Math.floor(risk / per), cfg.max_contracts[s]));
+}
+function outcomes(s, n, stop, rr) {
+  const costs = n * costPer(s), grossLoss = n * stop * CONTRACTS[s].pv, grossWin = grossLoss * rr;
+  return { loss: -(grossLoss + costs), win: grossWin - costs, grossWin };
+}
+function threshold(hwm) {
+  if (cfg.drawdown_type === "static") return cfg.starting_balance - cfg.max_drawdown;
+  let t = hwm - cfg.max_drawdown;
+  if (cfg.trail_lock_balance != null) t = Math.min(t, cfg.trail_lock_balance);
+  return t;
+}
+function mulberry32(a) {
+  return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+
+function runOnce(plan, o, rng, record) {
+  const start = cfg.starting_balance, targetBal = start + cfg.profit_target;
+  const intraday = cfg.drawdown_type === "intraday_trailing", dll = cfg.daily_loss_limit, cons = cfg.consistency_pct;
+  let bal = start, hwm = start, best = 0, trades = 0;
+  const path = record ? [start] : null;
+  for (let day = 1; day <= plan.max_days; day++) {
+    let thr = threshold(hwm), dayPnl = 0, losses = 0;
+    for (let i = 0; i < plan.max_trades_per_day; i++) {
+      let pnl;
+      if (rng() < plan.win_rate) {
+        if (intraday) { hwm = Math.max(hwm, bal + o.grossWin); thr = threshold(hwm); }
+        pnl = o.win;
+      } else { pnl = o.loss; losses++; }
+      bal += pnl; dayPnl += pnl; trades++;
+      if (path) path.push(bal);
+      if (bal <= thr) return { outcome: "fail", day, trades, path };
+      if (dll && dayPnl <= -dll) { if (cfg.daily_loss_limit_hard_fail) return { outcome: "fail", day, trades, path }; break; }
+      if (losses >= plan.max_losses_per_day) break;
+      if (plan.daily_loss_stop && dayPnl <= -plan.daily_loss_stop) break;
+      if (plan.daily_profit_goal && dayPnl >= plan.daily_profit_goal) break;
+    }
+    if (!intraday) hwm = Math.max(hwm, bal);
+    best = Math.max(best, dayPnl);
+    if (bal >= targetBal && day >= (cfg.min_trading_days || 0) && (cons == null || best <= cons * (bal - start)))
+      return { outcome: "pass", day, trades, path };
+  }
+  return { outcome: "timeout", day: plan.max_days, trades, path };
+}
+
+function simulate(plan, sims, seed = 42, samples = 0) {
+  const n = sizePosition(plan.contract, plan.risk_per_trade, plan.stop_points);
+  if (n === 0) return null;
+  const o = outcomes(plan.contract, n, plan.stop_points, plan.reward_risk);
+  const rng = mulberry32(seed);
+  const res = { pass: [], fail: [], timeout: [] }, tradesToPass = [], paths = [];
+  for (let i = 0; i < sims; i++) {
+    const r = runOnce(plan, o, rng, i < samples);
+    res[r.outcome].push(r.day);
+    if (r.outcome === "pass") tradesToPass.push(r.trades);
+    if (r.path) paths.push({ outcome: r.outcome, path: r.path });
+  }
+  return { contracts: n, ...o, res, tradesToPass, paths, sims };
+}
+
+const quantile = (arr, q) => { const s = [...arr].sort((a, b) => a - b); const i = (s.length - 1) * q, lo = Math.floor(i); return s[lo] + (s[Math.ceil(i)] - s[lo]) * (i - lo); };
+
+// ---- Form rendering ----
+const RULE_FIELDS = [
+  { h: "Account" },
+  { p: "firm", l: "Firm", t: "text" },
+  { p: "account", l: "Account", t: "text" },
+  { p: "challenge_fee", l: "Challenge fee ($)" },
+  { p: "starting_balance", l: "Starting balance ($)" },
+  { p: "profit_target", l: "Profit target ($)" },
+  { h: "Drawdown and limits" },
+  { p: "max_drawdown", l: "Max drawdown ($)" },
+  { p: "drawdown_type", l: "Drawdown type", t: "select", opts: [["static", "Static"], ["eod_trailing", "End-of-day trailing"], ["intraday_trailing", "Intraday trailing"]] },
+  { p: "trail_lock_balance", l: "Trailing stops at balance", nullable: true, ph: "never" },
+  { p: "daily_loss_limit", l: "Daily loss limit ($)", nullable: true, ph: "none" },
+  { p: "daily_loss_limit_hard_fail", l: "Daily limit fails account", t: "checkbox" },
+  { p: "consistency_pct", l: "Consistency rule (%)", nullable: true, scale: 100, ph: "none" },
+  { p: "min_trading_days", l: "Min trading days" },
+  { h: "Contracts and costs" },
+  { p: "max_contracts.MNQ", l: "Max MNQ contracts" },
+  { p: "max_contracts.NQ", l: "Max NQ contracts" },
+  { p: "costs.MNQ.commission_rt", l: "MNQ commission, round turn ($)", step: 0.01 },
+  { p: "costs.MNQ.slippage_ticks", l: "MNQ slippage (ticks)" },
+  { p: "costs.NQ.commission_rt", l: "NQ commission, round turn ($)", step: 0.01 },
+  { p: "costs.NQ.slippage_ticks", l: "NQ slippage (ticks)" },
+];
+const PLAN_STAT_FIELDS = [
+  { p: "plan.contract", l: "Contract", t: "select", opts: [["MNQ", "MNQ (micro)"], ["NQ", "NQ"]] },
+  { p: "plan.win_rate", l: "Win rate (%)", scale: 100 },
+  { p: "plan.reward_risk", l: "Reward : risk", step: 0.25 },
+  { p: "plan.risk_per_trade", l: "Risk per trade ($)", step: 25 },
+  { p: "plan.stop_points", l: "Stop (points)" },
+];
+const PLAN_DAILY_FIELDS = [
+  { h: "Daily rules" },
+  { p: "plan.max_trades_per_day", l: "Max trades per day" },
+  { p: "plan.max_losses_per_day", l: "Stop after N losses" },
+  { p: "plan.daily_loss_stop", l: "Personal daily stop ($)", nullable: true, ph: "none" },
+  { p: "plan.daily_profit_goal", l: "Daily profit goal ($)", nullable: true, ph: "none" },
+  { p: "plan.max_days", l: "Days to simulate" },
+];
+
+function renderFields(el, fields, obj, onChange) {
+  el.innerHTML = "";
+  for (const f of fields) {
+    if (f.h) { const h = document.createElement("h3"); h.textContent = f.h; el.appendChild(h); continue; }
+    const row = document.createElement("div"); row.className = "field";
+    const label = document.createElement("label"); label.textContent = f.l; row.appendChild(label);
+    let input;
+    const val = getPath(obj, f.p);
+    if (f.t === "select") {
+      input = document.createElement("select");
+      for (const [v, t] of f.opts) { const o = document.createElement("option"); o.value = v; o.textContent = t; input.appendChild(o); }
+      input.value = val;
+    } else if (f.t === "checkbox") {
+      input = document.createElement("input"); input.type = "checkbox"; input.checked = !!val;
+    } else {
+      input = document.createElement("input");
+      input.type = f.t === "text" ? "text" : "number";
+      if (f.step) input.step = f.step;
+      if (f.ph) input.placeholder = f.ph;
+      input.value = val == null ? "" : +(val * (f.scale || 1)).toFixed(4);
+    }
+    input.addEventListener("input", () => {
+      let v;
+      if (f.t === "checkbox") v = input.checked;
+      else if (f.t === "select" || f.t === "text") v = input.value;
+      else if (input.value === "") { if (!f.nullable) return; v = null; }
+      else { v = parseFloat(input.value) / (f.scale || 1); if (!isFinite(v)) return; }
+      setPath(obj, f.p, v);
+      onChange();
+    });
+    row.appendChild(input); el.appendChild(row);
+  }
+}
+
+// ---- Trade journal ----
+const JOURNAL_KEY = "propToolkit.journal.v1";
+const CSV_COLS = ["date", "time", "setup", "side", "contract", "qty", "entry", "stop", "exit", "mfe", "mae", "rules", "notes", "stopEstimated", "confirm", "dayType"];
+const CONFIRM_LABELS = { yes: "Confirmed", partial: "Partial", no: "Not confirmed", "": "Not recorded" };
+const DAYTYPE_LABELS = { trend: "Trend days", balance: "Balance days", "": "Day type not recorded" };
+const NUM_COLS = ["qty", "entry", "stop", "exit", "mfe", "mae"];
+const TARGETS = [0.5, 1, 1.5, 2, 2.5, 3];
+let trades = (() => { try { return JSON.parse(localStorage.getItem(JOURNAL_KEY)) || []; } catch (e) { return []; } })();
+const saveTrades = () => localStorage.setItem(JOURNAL_KEY, JSON.stringify(trades));
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const fmtR = (v) => (Math.abs(v) < 0.005 ? "0.00" : (v > 0 ? "+" : "") + v.toFixed(2)) + "R";
+const avg = (a) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0);
+const chrono = (a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")) || a.id - b.id;
+
+function tradeMetrics(t) {
+  const dir = t.side === "Short" ? -1 : 1;
+  const risk = Math.abs(t.entry - t.stop);
+  const pts = (t.exit - t.entry) * dir;
+  const spec = CONTRACTS[t.contract] || CONTRACTS.MNQ;
+  return {
+    t, risk, pts,
+    R: pts / risk,
+    usd: pts * spec.pv * t.qty - costPer(t.contract in CONTRACTS ? t.contract : "MNQ") * t.qty,
+    mfeR: t.mfe == null ? null : t.mfe / risk,
+  };
+}
+
+function summarize(ms) {
+  const wins = ms.filter((m) => m.R > 0);
+  return { n: ms.length, winRate: ms.length ? wins.length / ms.length : 0, expR: avg(ms.map((m) => m.R)), net: ms.reduce((s, m) => s + m.usd, 0) };
+}
+
+function renderJournal() {
+  const has = trades.length > 0;
+  $("j-detail").style.display = has ? "" : "none";
+  if (!has) {
+    $("j-stats").innerHTML = ""; $("j-stats").style.display = "none"; $("j-kv").innerHTML = "";
+    $("j-msg").innerHTML = '<span class="muted">No trades yet. Drop a DeepCharts Trade List export on the left (or log a trade manually) and your stats, target analysis and equity curve will appear here.</span>';
+    return;
+  }
+  $("j-stats").style.display = "";
+  const ms = [...trades].sort(chrono).map(tradeMetrics);
+  const s = summarize(ms);
+  const wins = ms.filter((m) => m.R > 0), losses = ms.filter((m) => m.R <= 0);
+  const grossWin = wins.reduce((a, m) => a + Math.max(0, m.usd), 0), grossLoss = -ms.reduce((a, m) => a + Math.min(0, m.usd), 0);
+  let streak = 0, worst = 0;
+  for (const m of ms) { streak = m.R <= 0 ? streak + 1 : 0; worst = Math.max(worst, streak); }
+  const followed = ms.filter((m) => m.t.rules), broken = ms.filter((m) => !m.t.rules);
+
+  $("j-stats").innerHTML = `
+    <div class="stat hero"><div class="k">Expectancy per trade</div><div class="v">${fmtR(s.expR)}</div></div>
+    <div class="stat"><div class="k">Win rate</div><div class="v">${pct(s.winRate, 1)}</div></div>
+    <div class="stat"><div class="k">Net P&amp;L after costs</div><div class="v ${s.net >= 0 ? "good" : "bad"}">${money(s.net)}</div></div>`;
+  const kv = [
+    ["Trades", s.n],
+    ["Average win", wins.length ? fmtR(avg(wins.map((m) => m.R))) : "–"],
+    ["Average loss", losses.length ? fmtR(avg(losses.map((m) => m.R))) : "–"],
+    ["Profit factor", grossLoss ? (grossWin / grossLoss).toFixed(2) : "–"],
+    ["Longest losing streak", worst],
+    ["Followed rules", pct(followed.length / s.n)],
+    ["Expectancy, rules followed", followed.length ? fmtR(summarize(followed).expR) : "–"],
+    ["Expectancy, rules broken", broken.length ? `<span class="bad">${fmtR(summarize(broken).expR)}</span>` : "–"],
+    ["Average stop", `${avg(ms.map((m) => m.risk)).toFixed(1)} pts`],
+  ];
+  $("j-kv").innerHTML = kv.map(([k, v]) => `<div><span>${k}</span><span>${v}</span></div>`).join("");
+  const msgs = [];
+  const review = trades.filter(needsReview).length;
+  if (review) msgs.push(`<span class="warn">${review} imported trade${review > 1 ? "s need" : " needs"} review. Click <b>Edit</b> in the trade list to set the setup and your real stop. Until then, R figures use the placeholder stop.</span>`);
+  if (s.n < 30) msgs.push(`<span class="warn">Only ${s.n} trade${s.n > 1 ? "s" : ""} so far. You need around 30–50 trades of one setup before these numbers mean much.</span>`);
+  $("j-msg").innerHTML = msgs.join("<br>");
+
+  renderTargets(ms);
+  renderSetups(ms);
+  renderConfirm(ms);
+  drawEquity(ms);
+  renderTradeList(ms);
+}
+
+function renderTargets(ms) {
+  const withMfe = ms.filter((m) => m.mfeR != null);
+  if (!withMfe.length) {
+    $("j-targets").innerHTML = '<p class="muted">Record the MFE (max move in favor) on your trades to see which target would have made the most.</p>';
+    return;
+  }
+  const rows = TARGETS.map((T) => {
+    const p = withMfe.filter((m) => m.mfeR >= T).length / withMfe.length;
+    return { T, p, exp: p * T - (1 - p) };
+  });
+  const best = rows.reduce((a, b) => (b.exp > a.exp ? b : a));
+  let html = `<table class="list"><tr><th class="l">Target</th><th>Reached before stop</th><th>Win rate needed</th><th>Expectancy per trade</th><th>Per 20 trades</th><th></th></tr>`;
+  for (const r of rows) {
+    html += `<tr class="${r === best && r.exp > 0 ? "best" : ""}"><td>${r.T}R</td><td>${pct(r.p)}</td><td>${pct(1 / (1 + r.T))}</td>
+      <td class="${r.exp > 0 ? "good" : "bad"}">${fmtR(r.exp)}</td><td>${fmtR(r.exp * 20)}</td>
+      <td><button class="btn ghost small" data-sim="${r.T}" data-p="${r.p.toFixed(3)}">Simulate</button></td></tr>`;
+  }
+  html += `</table><p class="note">Based on ${withMfe.length} trade${withMfe.length > 1 ? "s" : ""} with MFE recorded. Assumes every trade that didn't reach the target was stopped out for a full -1R, and ignores commissions. "Simulate" sends that win rate and target to the Simulator to check your odds of passing.</p>`;
+  $("j-targets").innerHTML = html;
+}
+
+function renderSetups(ms) {
+  const groups = {};
+  for (const m of ms) (groups[m.t.setup] ||= []).push(m);
+  let html = `<table class="list"><tr><th class="l">Setup</th><th>Trades</th><th>Win rate</th><th>Expectancy</th><th>Net P&amp;L</th></tr>`;
+  for (const [name, g] of Object.entries(groups).sort((a, b) => b[1].length - a[1].length)) {
+    const s = summarize(g);
+    html += `<tr><td>${esc(name)}</td><td>${s.n}</td><td>${pct(s.winRate)}</td><td class="${s.expR > 0 ? "good" : "bad"}">${fmtR(s.expR)}</td><td class="${s.net >= 0 ? "good" : "bad"}">${money(s.net)}</td></tr>`;
+  }
+  $("j-setups").innerHTML = html + "</table>";
+}
+
+function renderConfirm(ms) {
+  const MIN = 10;
+  const row = (label, g) => {
+    if (!g.length) return "";
+    const s = summarize(g);
+    let odds = `<span class="muted">needs ${MIN}+</span>`;
+    if (g.length >= MIN) {
+      const r = simulateJournal(tradesToDays(g), 2000, 7);
+      odds = pct(r.res.pass.length / r.sims);
+    }
+    return `<tr><td>${label}</td><td>${s.n}</td><td>${pct(s.winRate)}</td><td class="${s.expR > 0 ? "good" : "bad"}">${fmtR(s.expR)}</td>
+      <td class="${s.net >= 0 ? "good" : "bad"}">${money(s.net)}</td><td>${odds}</td></tr>`;
+  };
+  const head = `<table class="list"><tr><th class="l"></th><th>Trades</th><th>Win rate</th><th>Expectancy</th><th>Net P&amp;L</th><th>Pass odds</th></tr>`;
+  let html = head;
+  for (const k of ["yes", "partial", "no", ""]) html += row(CONFIRM_LABELS[k], ms.filter((m) => (m.t.confirm || "") === k));
+  html += `<tr><td colspan="6" style="height:8px"></td></tr>`;
+  for (const k of ["trend", "balance", ""]) html += row(DAYTYPE_LABELS[k], ms.filter((m) => (m.t.dayType || "") === k));
+  $("j-confirm").innerHTML = html + `</table><p class="note">Tag each trade with whether the order-flow confirmation was there (big trades in the candle body rather than the wick, delta agreeing, aggression at the level) and the day type. Pass odds replay only that group's trading days through the challenge rules, like the Simulator's journal mode. If confirmed trades clearly beat unconfirmed ones over 30+ trades, the confirmation is your edge: only take those.</p>`;
+}
+
+function renderTradeList(ms) {
+  let html = `<table class="list"><tr><th class="l">Date</th><th class="l">Time</th><th class="l">Setup</th><th class="l">Side</th><th>Qty</th><th>Entry</th><th>Stop</th><th>Exit</th><th>Result</th><th>P&amp;L</th><th>MFE</th><th class="l">Rules</th><th class="l">Confirm</th><th class="l">Notes</th><th></th><th></th></tr>`;
+  for (const m of [...ms].reverse()) {
+    const t = m.t;
+    const setup = t.setup === "Unreviewed" ? '<span class="warn">Unreviewed</span>' : esc(t.setup);
+    const stop = t.stopEstimated ? `${t.stop}<span class="tag" title="Placeholder stop from import. Edit to enter your real stop.">est.</span>` : t.stop;
+    html += `<tr class="${String(t.id) === form.dataset.editId ? "editing" : ""}"><td>${esc(t.date)}</td><td class="l">${esc(t.time)}</td><td class="l">${setup}</td><td class="l">${esc(t.side)}</td>
+      <td>${t.qty} ${esc(t.contract)}</td><td>${t.entry}</td><td>${stop}</td><td>${t.exit}</td>
+      <td class="${m.R > 0 ? "good" : "bad"}">${fmtR(m.R)}</td><td class="${m.usd >= 0 ? "good" : "bad"}">${money(m.usd)}</td>
+      <td>${m.mfeR == null ? "–" : m.mfeR.toFixed(1) + "R"}</td><td class="l">${t.rules ? "Yes" : '<span class="bad">No</span>'}</td>
+      <td class="l">${t.confirm === "yes" ? '<span class="good">Yes</span>' : t.confirm === "no" ? '<span class="bad">No</span>' : t.confirm === "partial" ? "Partial" : '<span class="muted">–</span>'}</td>
+      <td class="notes" title="${esc(t.notes)}">${esc(t.notes)}</td>
+      <td><button class="link" data-edit="${t.id}">Edit</button></td>
+      <td><button class="del" data-del="${t.id}" title="Delete trade">&times;</button></td></tr>`;
+  }
+  $("j-trades").innerHTML = html + "</table>";
+}
+
+function drawEquity(ms) {
+  const c = $("j-chart"), dpr = window.devicePixelRatio || 1;
+  const W = c.clientWidth, H = c.clientHeight;
+  if (!W) return;
+  c.width = W * dpr; c.height = H * dpr;
+  const ctx = c.getContext("2d"); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, W, H);
+  const css = getComputedStyle(document.documentElement), col = (n) => css.getPropertyValue(n).trim();
+  const pts = [0]; for (const m of ms) pts.push(pts[pts.length - 1] + m.R);
+  let minY = Math.min(0, ...pts), maxY = Math.max(0, ...pts);
+  const pad = Math.max(0.5, (maxY - minY) * 0.08); minY -= pad; maxY += pad;
+  const L = 52, R = 12, T = 10, B = 38, maxX = Math.max(1, pts.length - 1);
+  const x = (i) => L + (i / maxX) * (W - L - R), y = (v) => T + (1 - (v - minY) / (maxY - minY)) * (H - T - B);
+
+  ctx.font = "11px -apple-system, sans-serif"; ctx.fillStyle = col("--muted"); ctx.strokeStyle = col("--line"); ctx.lineWidth = 1;
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let k = 0; k <= 4; k++) {
+    const v = minY + ((maxY - minY) * k) / 4;
+    ctx.beginPath(); ctx.moveTo(L, y(v)); ctx.lineTo(W - R, y(v)); ctx.stroke();
+    ctx.fillText(v.toFixed(1) + "R", L - 8, y(v));
+  }
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  const step = Math.max(1, Math.ceil(maxX / 8));
+  for (let i = 0; i <= maxX; i += step) ctx.fillText(i, x(i), H - B + 6);
+  ctx.fillText("Trade number", L + (W - L - R) / 2, H - 14);
+  ctx.save(); ctx.translate(10, T + (H - T - B) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText("Cumulative R", 0, -4); ctx.restore();
+
+  ctx.setLineDash([4, 4]); ctx.strokeStyle = col("--muted"); ctx.beginPath(); ctx.moveTo(L, y(0)); ctx.lineTo(W - R, y(0)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = col("--accent"); ctx.lineWidth = 2; ctx.beginPath();
+  pts.forEach((v, i) => (i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v))));
+  ctx.stroke();
+}
+
+function parseCSV(text, delim = ",") {
+  const rows = []; let row = [], f = "", q = false;
+  text = text.replace(/^\uFEFF/, "");
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === delim) { row.push(f); f = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
+    else f += c;
+  }
+  if (f || row.length) { row.push(f); rows.push(row); }
+  return rows.filter((r) => r.some((v) => v.trim() !== ""));
+}
+
+function exportCSV() {
+  const cell = (v) => { const s = String(v ?? ""); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const lines = [CSV_COLS.join(",")].concat([...trades].sort(chrono).map((t) => CSV_COLS.map((k) => cell(t[k])).join(",")));
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+  a.download = `trade-journal-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+// ---- Import (DeepCharts Strategy Report "Trade List" export, or a journal backup) ----
+const IMPORT_KEY = "propToolkit.import.v1";
+const impSettings = Object.assign({ tz: "Europe/London", datefmt: "dmy", stop: 15, merge: true },
+  (() => { try { return JSON.parse(localStorage.getItem(IMPORT_KEY)) || {}; } catch (e) { return {}; } })());
+const saveImpSettings = () => localStorage.setItem(IMPORT_KEY, JSON.stringify(impSettings));
+
+const normHeader = (h) => h.toLowerCase().replace(/[^a-z0-9]/g, "");
+const DC_ALIASES = {
+  symbol: ["symbol", "instrument", "contract", "ticker"],
+  qty: ["quantity", "qty", "size", "contracts", "position"],
+  side: ["side", "direction", "marketpos", "buysell", "type"],
+  entryTime: ["entrydt", "entrytime", "entrydatetime", "entrydate", "opentime", "dt", "date"],
+  entryPrice: ["entryprice", "avgentryprice", "openprice", "entry"],
+  exitPrice: ["exitprice", "avgexitprice", "closeprice", "exit"],
+  pnl: ["profitloss", "profit", "pnl", "netprofit", "pl", "realizedpnl"],
+  runup: ["runup", "maxrunup", "mfe"],
+  drawdown: ["drawdown", "maxdrawdown", "mae"],
+};
+const pad2 = (n) => String(n).padStart(2, "0");
+const roundTick = (v) => Math.round(v * 4) / 4;
+const tradeKey = (t) => [t.date, t.time, t.side, t.contract, t.qty, t.entry, t.exit].join("|");
+const needsReview = (t) => t.stopEstimated || t.setup === "Unreviewed";
+
+function parseNum(s) {
+  s = String(s ?? "").trim();
+  if (!s) return NaN;
+  let neg = /^\(.*\)$/.test(s);
+  s = s.replace(/[^\d.,\-]/g, "");
+  if (s.startsWith("-")) { neg = !neg; s = s.slice(1); }
+  const lastComma = s.lastIndexOf(","), lastDot = s.lastIndexOf(".");
+  if (lastComma > lastDot && !(lastDot === -1 && /^\d{1,3}(,\d{3})+$/.test(s))) s = s.replace(/\./g, "").replace(",", ".");
+  else s = s.replace(/,/g, "");
+  const v = parseFloat(s);
+  return neg ? -v : v;
+}
+
+function parseDateTime(s) {
+  s = String(s ?? "").trim();
+  const time = "(?:[ T]+(\\d{1,2}):(\\d{2})(?::(\\d{2}))?(?:[.,]\\d+)?\\s*(AM|PM)?)?";
+  let m = s.match(new RegExp("^(\\d{4})[-/.](\\d{1,2})[-/.](\\d{1,2})" + time, "i")), y, mo, d;
+  if (m) { y = +m[1]; mo = +m[2]; d = +m[3]; }
+  else {
+    m = s.match(new RegExp("^(\\d{1,2})[-/.](\\d{1,2})[-/.](\\d{2,4})" + time, "i"));
+    if (!m) return null;
+    const a = +m[1], b = +m[2];
+    const dmy = a > 12 ? true : b > 12 ? false : impSettings.datefmt === "dmy";
+    d = dmy ? a : b; mo = dmy ? b : a; y = +m[3] < 100 ? 2000 + +m[3] : +m[3];
+  }
+  let hh = m[4] == null ? null : +m[4];
+  if (hh != null && m[7]) { const pm = /pm/i.test(m[7]); if (pm && hh < 12) hh += 12; if (!pm && hh === 12) hh = 0; }
+  return { y, mo, d, hh, mm: +(m[5] || 0), ss: +(m[6] || 0) };
+}
+
+function zoneParts(zone, utcMs) {
+  const f = new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return Object.fromEntries(f.formatToParts(new Date(utcMs)).map((p) => [p.type, p.value]));
+}
+
+function toNewYork(dt, zone) {
+  if (dt.hh == null) return { date: `${dt.y}-${pad2(dt.mo)}-${pad2(dt.d)}`, time: "" };
+  const naive = Date.UTC(dt.y, dt.mo - 1, dt.d, dt.hh, dt.mm, dt.ss);
+  const offset = (utc) => { const p = zoneParts(zone, utc); return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second) - utc; };
+  let utc = naive - offset(naive);
+  utc = naive - offset(utc);
+  const p = zoneParts("America/New_York", utc);
+  return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}` };
+}
+
+function importFile(text) {
+  const firstLine = text.replace(/^\uFEFF/, "").split(/\r?\n/)[0] || "";
+  const delim = [";", "\t", ","].map((d) => [d, firstLine.split(d).length]).sort((a, b) => b[1] - a[1])[0][0];
+  const rows = parseCSV(text, delim);
+  if (rows.length < 2) return showImport("No trades found in that file.", true);
+  const head = rows[0].map(normHeader);
+  const isBackup = ["stop", "side", "entry", "exit", "date"].every((k) => head.includes(k));
+  const incoming = isBackup ? readBackupRows(rows, head) : readDeepChartsRows(rows, head);
+  if (!incoming) return;
+  const existing = new Set(trades.map(tradeKey));
+  let added = 0, dupes = 0, id = Date.now();
+  for (const t of incoming.trades) {
+    const k = tradeKey(t);
+    if (existing.has(k)) { dupes++; continue; }
+    existing.add(k); trades.push({ id: id++, ...t }); added++;
+  }
+  saveTrades(); renderJournal();
+  const extra = [dupes && `${dupes} already in the journal`, incoming.skipped && `${incoming.skipped} not NQ/MNQ or unreadable`].filter(Boolean);
+  showImport(`Imported ${added} trade${added === 1 ? "" : "s"}${extra.length ? " (skipped " + extra.join(", ") + ")" : ""}.` +
+    (added && !isBackup ? " Review them in the trade list: set the setup and real stop." : ""), added === 0 && !dupes);
+}
+
+function showImport(text, isError) {
+  $("imp-msg").innerHTML = `<span class="${isError ? "bad" : "good"}">${esc(text)}</span>`;
+}
+
+function readBackupRows(rows, head) {
+  const out = [];
+  let skipped = 0;
+  for (const r of rows.slice(1)) {
+    const t = {};
+    head.forEach((k, i) => { const key = CSV_COLS.find((c) => normHeader(c) === k); if (key) t[key] = (r[i] ?? "").trim(); });
+    for (const k of NUM_COLS) t[k] = t[k] === "" || t[k] == null ? null : parseNum(t[k]);
+    t.qty = t.qty || 1; t.contract = t.contract in CONTRACTS ? t.contract : "MNQ";
+    t.side = /^s/i.test(t.side) ? "Short" : "Long";
+    t.rules = !/^(false|no|0)$/i.test(t.rules || "true");
+    t.stopEstimated = /^(true|yes|1)$/i.test(t.stopEstimated || "");
+    t.setup = t.setup || "Other";
+    t.confirm = CONFIRM_LABELS[(t.confirm || "").toLowerCase()] ? (t.confirm || "").toLowerCase() : "";
+    t.dayType = DAYTYPE_LABELS[(t.dayType || "").toLowerCase()] ? (t.dayType || "").toLowerCase() : "";
+    if ([t.entry, t.stop, t.exit].some((v) => !isFinite(v)) || t.entry === t.stop) { skipped++; continue; }
+    out.push(t);
+  }
+  return { trades: out, skipped };
+}
+
+function readDeepChartsRows(rows, head) {
+  const col = {};
+  for (const [k, aliases] of Object.entries(DC_ALIASES)) {
+    for (const a of aliases) { const i = head.indexOf(a); if (i >= 0 && !Object.values(col).includes(i)) { col[k] = i; break; } }
+  }
+  const missing = [["entryTime", "Entry DT"], ["entryPrice", "Entry Price"], ["exitPrice", "Exit Price"], ["qty", "Quantity"]].filter(([k]) => col[k] == null);
+  if (missing.length) {
+    showImport(`This doesn't look like a DeepCharts Trade List export. Missing: ${missing.map((m) => m[1]).join(", ")}. Columns found: ${rows[0].join(", ")}`, true);
+    return null;
+  }
+  const parsed = [];
+  let skipped = 0;
+  for (const r of rows.slice(1)) {
+    const sym = col.symbol != null ? (r[col.symbol] || "").toUpperCase().replace(/^[^A-Z]+/, "") : "";
+    const contract = !sym ? cfg.plan.contract : sym.startsWith("MNQ") ? "MNQ" : sym.startsWith("NQ") ? "NQ" : null;
+    const qtyRaw = parseNum(r[col.qty]), entry = parseNum(r[col.entryPrice]), exit = parseNum(r[col.exitPrice]);
+    const dt = parseDateTime(r[col.entryTime]);
+    if (!contract || !dt || !isFinite(qtyRaw) || qtyRaw === 0 || !isFinite(entry) || !isFinite(exit)) { skipped++; continue; }
+    const pnl = col.pnl != null ? parseNum(r[col.pnl]) : NaN;
+    let side = null;
+    if (col.side != null) { const s = (r[col.side] || "").toLowerCase(); side = /sell|short/.test(s) ? "Short" : /buy|long/.test(s) ? "Long" : null; }
+    if (!side && qtyRaw < 0) side = "Short";
+    if (!side && isFinite(pnl) && Math.abs(pnl) > 0 && exit !== entry) side = (exit - entry) * pnl > 0 ? "Long" : "Short";
+    side = side || "Long";
+    const qty = Math.abs(qtyRaw), pv = CONTRACTS[contract].pv;
+    const runup = col.runup != null ? parseNum(r[col.runup]) : NaN;
+    const dd = col.drawdown != null ? parseNum(r[col.drawdown]) : NaN;
+    parsed.push({
+      group: [r[col.entryTime], side, entry, contract].join("|"),
+      ...toNewYork(dt, impSettings.tz), side, contract, qty, entry, exit,
+      mfePts: isFinite(runup) ? Math.abs(runup) / (qty * pv) : null,
+      maePts: isFinite(dd) ? Math.abs(dd) / (qty * pv) : null,
+    });
+  }
+
+  const groups = new Map();
+  for (const p of parsed) {
+    const k = impSettings.merge ? p.group : Symbol();
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(p);
+  }
+  const out = [];
+  for (const g of groups.values()) {
+    const f = g[0], qty = g.reduce((s, p) => s + p.qty, 0);
+    const exit = g.reduce((s, p) => s + p.exit * p.qty, 0) / qty;
+    const mfes = g.map((p) => p.mfePts).filter((v) => v != null), maes = g.map((p) => p.maePts).filter((v) => v != null);
+    const dir = f.side === "Short" ? -1 : 1;
+    out.push({
+      date: f.date, time: f.time, setup: "Unreviewed", side: f.side, contract: f.contract, qty,
+      entry: f.entry, stop: roundTick(f.entry - dir * impSettings.stop), exit: +exit.toFixed(2),
+      mfe: mfes.length ? roundTick(Math.max(...mfes)) : null, mae: maes.length ? roundTick(Math.max(...maes)) : null,
+      rules: true, notes: "", stopEstimated: true, confirm: "", dayType: "",
+    });
+  }
+  return { trades: out, skipped };
+}
+
+// ---- Simulator ----
+const SIM_KEY = "propToolkit.sim.v1";
+const simSettings = Object.assign({ source: "stats", setup: "All", rulesOnly: false, applyDaily: true },
+  (() => { try { return JSON.parse(localStorage.getItem(SIM_KEY)) || {}; } catch (e) { return {}; } })());
+const saveSimSettings = () => localStorage.setItem(SIM_KEY, JSON.stringify(simSettings));
+
+function journalSample() {
+  let ts = trades;
+  if (simSettings.setup !== "All") ts = ts.filter((t) => t.setup === simSettings.setup);
+  if (simSettings.rulesOnly) ts = ts.filter((t) => t.rules);
+  const ms = [...ts].sort(chrono).map(tradeMetrics);
+  return { ms, days: tradesToDays(ms) };
+}
+function tradesToDays(ms) {
+  const days = [];
+  for (const m of ms) {
+    if (!days.length || days[days.length - 1].date !== m.t.date) days.push({ date: m.t.date, trades: [] });
+    const gross = m.t.mfe != null ? m.t.mfe * CONTRACTS[m.t.contract in CONTRACTS ? m.t.contract : "MNQ"].pv * m.t.qty : m.usd;
+    days[days.length - 1].trades.push({ usd: m.usd, peak: Math.max(0, gross, m.usd) });
+  }
+  return days;
+}
+
+function runJournalOnce(days, rng, record) {
+  const plan = cfg.plan, apply = simSettings.applyDaily;
+  const start = cfg.starting_balance, targetBal = start + cfg.profit_target;
+  const intraday = cfg.drawdown_type === "intraday_trailing", dll = cfg.daily_loss_limit, cons = cfg.consistency_pct;
+  let bal = start, hwm = start, best = 0, trades = 0;
+  const path = record ? [start] : null;
+  for (let day = 1; day <= plan.max_days; day++) {
+    const src = days[Math.floor(rng() * days.length)];
+    let thr = threshold(hwm), dayPnl = 0, losses = 0, n = 0;
+    for (const tr of src.trades) {
+      if (apply && n >= plan.max_trades_per_day) break;
+      if (intraday) { hwm = Math.max(hwm, bal + tr.peak); thr = threshold(hwm); }
+      bal += tr.usd; dayPnl += tr.usd; trades++; n++;
+      if (tr.usd <= 0) losses++;
+      if (path) path.push(bal);
+      if (bal <= thr) return { outcome: "fail", day, trades, path };
+      if (dll && dayPnl <= -dll) { if (cfg.daily_loss_limit_hard_fail) return { outcome: "fail", day, trades, path }; break; }
+      if (!apply) continue;
+      if (losses >= plan.max_losses_per_day) break;
+      if (plan.daily_loss_stop && dayPnl <= -plan.daily_loss_stop) break;
+      if (plan.daily_profit_goal && dayPnl >= plan.daily_profit_goal) break;
+    }
+    if (!intraday) hwm = Math.max(hwm, bal);
+    best = Math.max(best, dayPnl);
+    if (bal >= targetBal && day >= (cfg.min_trading_days || 0) && (cons == null || best <= cons * (bal - start)))
+      return { outcome: "pass", day, trades, path };
+  }
+  return { outcome: "timeout", day: plan.max_days, trades, path };
+}
+
+function simulateJournal(days, sims, seed = 42, samples = 0) {
+  const rng = mulberry32(seed);
+  const res = { pass: [], fail: [], timeout: [] }, tradesToPass = [], paths = [];
+  for (let i = 0; i < sims; i++) {
+    const r = runJournalOnce(days, rng, i < samples);
+    res[r.outcome].push(r.day);
+    if (r.outcome === "pass") tradesToPass.push(r.trades);
+    if (r.path) paths.push({ outcome: r.outcome, path: r.path });
+  }
+  return { res, tradesToPass, paths, sims };
+}
+
+function refreshSimSource() {
+  const journal = simSettings.source === "journal";
+  $("sim-source").value = simSettings.source;
+  $("plan-stat-fields").style.display = journal ? "none" : "";
+  $("journal-src").style.display = journal ? "" : "none";
+  $("sweep-panel").style.display = journal ? "none" : "";
+  $("chart-note").textContent = journal
+    ? "40 simulated challenges built from your real trading days. Balance after each trade, after costs."
+    : "40 randomly simulated challenges using your plan. Balance after each trade, after costs.";
+  const setups = [...new Set(trades.map((t) => t.setup))].sort();
+  if (simSettings.setup !== "All" && !setups.includes(simSettings.setup)) setups.push(simSettings.setup);
+  $("sim-setup").innerHTML = [["All", "All setups"], ...setups.map((s) => [s, s])]
+    .map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join("");
+  $("sim-setup").value = simSettings.setup;
+  $("sim-rules-only").checked = simSettings.rulesOnly;
+  $("sim-apply-daily").checked = simSettings.applyDaily;
+}
+
+function renderOutcomes(r, kv) {
+  const sims = r.sims, p = r.res.pass.length / sims;
+  $("s-pass").textContent = pct(p, 1);
+  $("s-fail").textContent = pct(r.res.fail.length / sims, 1);
+  $("s-timeout").textContent = pct(r.res.timeout.length / sims, 1);
+  if (r.res.pass.length) {
+    kv.push(["Median days to pass", Math.round(quantile(r.res.pass, 0.5))]);
+    kv.push(["Middle half of passes", `${Math.round(quantile(r.res.pass, 0.25))}–${Math.round(quantile(r.res.pass, 0.75))} days`]);
+    kv.push(["Median trades to pass", Math.round(quantile(r.tradesToPass, 0.5))]);
+  }
+  if (r.res.fail.length) kv.push(["Median failure day", Math.round(quantile(r.res.fail, 0.5))]);
+  if (cfg.challenge_fee && p > 0) kv.push(["Fees per passed challenge", `${money(cfg.challenge_fee / p)} <span class="muted">(${(1 / p).toFixed(1)} tries)</span>`]);
+  $("sim-kv").innerHTML = kv.map(([k, v]) => `<div><span>${k}</span><span>${v}</span></div>`).join("");
+}
+
+function clearOutcomes(msg) {
+  for (const id of ["s-pass", "s-fail", "s-timeout"]) $(id).textContent = "–";
+  $("sim-kv").innerHTML = "";
+  $("sim-msg").innerHTML = msg;
+  drawChart(null);
+}
+
+function renderSim() {
+  refreshSimSource();
+  const sims = Math.max(500, Math.min(100000, parseInt($("sims").value) || 10000));
+  if (simSettings.source === "journal") return renderJournalSim(sims);
+  const plan = cfg.plan;
+  const r = simulate(plan, sims, 42, 40);
+  if (!r) return clearOutcomes(`<span class="bad">${money(plan.risk_per_trade)} risk doesn't cover 1 ${plan.contract} at a ${plan.stop_points} pt stop.</span>`);
+  const ev = plan.win_rate * r.win + (1 - plan.win_rate) * r.loss;
+  const be = -r.loss / (r.win - r.loss);
+  renderOutcomes(r, [
+    ["Position", `${r.contracts} ${plan.contract}`],
+    ["Win after costs", `<span class="good">+${money(r.win)}</span>`],
+    ["Loss after costs", `<span class="bad">${money(r.loss)}</span>`],
+    ["Expectancy per trade", `<span class="${ev > 0 ? "good" : "bad"}">${money(ev, 2)}</span>`],
+    ["Breakeven win rate", pct(be, 1)],
+    ["Your win rate", pct(plan.win_rate, 1)],
+  ]);
+  const msgs = [];
+  if (ev <= 0) msgs.push(`<span class="bad">Negative expectancy: this plan loses money on average, no matter how risk is managed.</span>`);
+  if (cfg.drawdown_type === "intraday_trailing") msgs.push(`<span class="muted">Intraday trailing ignores open-profit peaks on losing trades, so real results may be slightly worse.</span>`);
+  msgs.push(`<span class="muted">Assumes every trade hits the full stop or full target, independently. Real losing streaks cluster, so treat this as a comparison tool, not a forecast.</span>`);
+  $("sim-msg").innerHTML = msgs.join("<br>");
+  drawChart(r);
+}
+
+function renderJournalSim(sims) {
+  const { ms, days } = journalSample();
+  if (!ms.length) {
+    $("journal-sample").innerHTML = "";
+    const why = trades.length ? "No journal trades match these filters." : "Your journal is empty.";
+    return clearOutcomes(`<span class="warn">${why} Log or import trades in the <button class="link" data-goto="journal">Trade journal</button> tab, or switch back to coin-flip stats.</span>`);
+  }
+  const wins = ms.filter((m) => m.usd > 0), losses = ms.filter((m) => m.usd <= 0);
+  const ev = avg(ms.map((m) => m.usd)), wr = wins.length / ms.length;
+  const avgDay = days.reduce((s, d) => s + d.trades.reduce((a, t) => a + t.usd, 0), 0) / days.length;
+  const range = days.length > 1 ? `${days[0].date} to ${days[days.length - 1].date}` : days[0].date;
+  $("journal-sample").innerHTML = [
+    ["Trades", ms.length], ["Trading days", days.length], ["Win rate", pct(wr, 1)],
+    ["Average win", wins.length ? `<span class="good">+${money(avg(wins.map((m) => m.usd)))}</span>` : "–"],
+    ["Average loss", losses.length ? `<span class="bad">${money(avg(losses.map((m) => m.usd)))}</span>` : "–"],
+    ["Expectancy per trade", `<span class="${ev > 0 ? "good" : "bad"}">${money(ev, 2)}</span>`],
+    ["Dates", range],
+  ].map(([k, v]) => `<div><span>${k}</span><span>${v}</span></div>`).join("");
+
+  const r = simulateJournal(days, sims, 42, 40);
+  renderOutcomes(r, [
+    ["Sample", `${ms.length} trades, ${days.length} days`],
+    ["Expectancy per trade", `<span class="${ev > 0 ? "good" : "bad"}">${money(ev, 2)}</span>`],
+    ["Average day", `<span class="${avgDay > 0 ? "good" : "bad"}">${money(avgDay)}</span>`],
+    ["Win rate", pct(wr, 1)],
+    ["Average win", wins.length ? `<span class="good">+${money(avg(wins.map((m) => m.usd)))}</span>` : "–"],
+    ["Average loss", losses.length ? `<span class="bad">${money(avg(losses.map((m) => m.usd)))}</span>` : "–"],
+  ]);
+  const msgs = [];
+  if (ms.length < 30 || days.length < 10)
+    msgs.push(`<span class="warn">Only ${ms.length} trade${ms.length === 1 ? "" : "s"} over ${days.length} day${days.length === 1 ? "" : "s"}. With fewer than about 30 trades or 10 trading days, this result isn't reliable: a few lucky or unlucky days dominate it.</span>`);
+  if (ev <= 0) msgs.push(`<span class="bad">Your journal trades lose money on average after costs, so repeating them won't pass the challenge.</span>`);
+  if (cfg.drawdown_type === "intraday_trailing" && ms.some((m) => m.t.mfe == null))
+    msgs.push(`<span class="muted">Some trades have no MFE, so their open-profit peak for the intraday trailing drawdown is taken as the realised profit. Real results may be slightly worse.</span>`);
+  if (ms.some((m) => m.t.stopEstimated))
+    msgs.push(`<span class="muted">Some trades still have placeholder stops. That doesn't affect this simulation, which uses real dollar P&amp;L.</span>`);
+  msgs.push(`<span class="muted">${simSettings.applyDaily ? "Your daily rules cut replayed days short when they trigger." : "Days are replayed in full, exactly as you traded them."} Assumes future days look like your past ones. Treat this as a guide, not a forecast.</span>`);
+  $("sim-msg").innerHTML = msgs.join("<br>");
+  drawChart(r);
+}
+
+function drawChart(r) {
+  const c = $("chart"), dpr = window.devicePixelRatio || 1;
+  const W = c.clientWidth, H = c.clientHeight;
+  c.width = W * dpr; c.height = H * dpr;
+  const ctx = c.getContext("2d"); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, W, H);
+  if (!r) return;
+  const css = getComputedStyle(document.documentElement), col = (n) => css.getPropertyValue(n).trim();
+  const start = cfg.starting_balance, target = start + cfg.profit_target, fail0 = threshold(start);
+  const maxX = Math.max(10, ...r.paths.map((p) => p.path.length - 1));
+  let minY = fail0, maxY = target;
+  for (const p of r.paths) for (const v of p.path) { if (v < minY) minY = v; if (v > maxY) maxY = v; }
+  const padY = (maxY - minY) * 0.06; minY -= padY; maxY += padY;
+  const L = 72, R = 12, T = 10, B = 40;
+  const x = (i) => L + (i / maxX) * (W - L - R), y = (v) => T + (1 - (v - minY) / (maxY - minY)) * (H - T - B);
+
+  ctx.font = "11px -apple-system, sans-serif"; ctx.fillStyle = col("--muted"); ctx.strokeStyle = col("--line"); ctx.lineWidth = 1;
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let k = 0; k <= 5; k++) {
+    const v = minY + ((maxY - minY) * k) / 5, yy = y(v);
+    ctx.beginPath(); ctx.moveTo(L, yy); ctx.lineTo(W - R, yy); ctx.stroke();
+    ctx.fillText(money(Math.round(v / 100) * 100), L - 8, yy);
+  }
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  const step = Math.max(1, Math.ceil(maxX / 8 / 10) * 10);
+  for (let i = 0; i <= maxX; i += step) ctx.fillText(i, x(i), H - B + 6);
+  ctx.fillText("Trade number", L + (W - L - R) / 2, H - 16);
+  ctx.save(); ctx.translate(12, T + (H - T - B) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText("Account balance ($)", 0, -6); ctx.restore();
+
+  const hline = (v, color) => { ctx.setLineDash([5, 4]); ctx.strokeStyle = color; ctx.beginPath(); ctx.moveTo(L, y(v)); ctx.lineTo(W - R, y(v)); ctx.stroke(); ctx.setLineDash([]); };
+  hline(target, col("--accent")); hline(fail0, col("--warn"));
+
+  const colors = { pass: col("--good"), fail: col("--bad"), timeout: col("--muted") };
+  ctx.globalAlpha = 0.55; ctx.lineWidth = 1.2;
+  for (const p of r.paths) {
+    ctx.strokeStyle = colors[p.outcome]; ctx.beginPath();
+    p.path.forEach((v, i) => (i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v))));
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function runSweep() {
+  const kind = $("sweep-kind").value, plan = cfg.plan, sims = 2000;
+  const winRates = [0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7];
+  const cols = kind === "risk" ? [100, 150, 200, 300, 400, 600] : [0.5, 0.75, 1, 1.5, 2, 3];
+  const key = kind === "risk" ? "risk_per_trade" : "reward_risk";
+  const fmt = kind === "risk" ? (v) => "$" + v : (v) => v + "R";
+  const nearest = (arr, v) => arr.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a));
+  const curW = nearest(winRates, plan.win_rate), curC = nearest(cols, plan[key]);
+  const good = getComputedStyle(document.documentElement).getPropertyValue("--good").trim();
+  const rgb = good.match(/\w\w/g).map((h) => parseInt(h, 16)).join(",");
+
+  let html = `<table class="heat"><tr><th>Win rate</th>${cols.map((c) => `<th>${fmt(c)}</th>`).join("")}</tr>`;
+  for (const w of winRates) {
+    html += `<tr><th>${pct(w)}</th>`;
+    for (const c of cols) {
+      const r = simulate({ ...plan, win_rate: w, [key]: c }, sims);
+      const cur = w === curW && c === curC ? ' class="cur"' : "";
+      if (!r) { html += `<td${cur}><span class="muted">too small</span></td>`; continue; }
+      const p = r.res.pass.length / sims;
+      html += `<td${cur} style="background:rgba(${rgb},${(p * 0.75).toFixed(2)})">${pct(p)}</td>`;
+    }
+    html += `</tr>`;
+  }
+  const fixed = kind === "risk" ? `${plan.reward_risk}R target` : `${money(plan.risk_per_trade)} risk per trade`;
+  html += `</table><p class="note">${plan.contract}, ${plan.stop_points} pt stop, ${fixed}, ${sims.toLocaleString()} simulations per cell. "Too small" means the risk doesn't cover 1 contract. Higher reward : risk usually comes with a lower win rate in real trading.</p>`;
+  $("sweep").innerHTML = html;
+}
+
+// ---- Wiring ----
+let simTimer;
+const scheduleSim = () => { clearTimeout(simTimer); simTimer = setTimeout(renderSim, 250); };
+function onRulesChange() {
+  save(); renderJournal(); scheduleSim();
+  $("json").value = JSON.stringify(cfg, null, 2);
+  $("subtitle").textContent = `${cfg.firm} · ${cfg.account} · Nasdaq futures (NQ / MNQ)`;
+}
+const onPlanChange = () => { save(); scheduleSim(); $("json").value = JSON.stringify(cfg, null, 2); };
+
+const renderPlanFields = () => {
+  renderFields($("plan-stat-fields"), PLAN_STAT_FIELDS, cfg, onPlanChange);
+  renderFields($("plan-daily-fields"), PLAN_DAILY_FIELDS, cfg, onPlanChange);
+};
+renderFields($("rule-fields"), RULE_FIELDS, cfg, onRulesChange);
+renderPlanFields();
+
+const onSimSettingsChange = () => { saveSimSettings(); scheduleSim(); };
+$("sim-source").addEventListener("input", (e) => { simSettings.source = e.target.value; saveSimSettings(); renderSim(); });
+$("sim-setup").addEventListener("input", (e) => { simSettings.setup = e.target.value; onSimSettingsChange(); });
+$("sim-rules-only").addEventListener("input", (e) => { simSettings.rulesOnly = e.target.checked; onSimSettingsChange(); });
+$("sim-apply-daily").addEventListener("input", (e) => { simSettings.applyDaily = e.target.checked; onSimSettingsChange(); });
+$("sim-msg").addEventListener("click", (e) => { if (e.target.dataset.goto) showTab(e.target.dataset.goto); });
+
+function showTab(name) {
+  document.querySelectorAll("nav button").forEach((x) => x.classList.toggle("active", x.dataset.tab === name));
+  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.id === "tab-" + name));
+  if (name === "sim") renderSim();
+  if (name === "journal") renderJournal();
+}
+document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+
+const form = $("trade-form");
+form.date.value = new Date().toISOString().slice(0, 10);
+const FORM_FIELDS = ["date", "time", "setup", "confirm", "dayType", "side", "contract", "qty", "entry", "stop", "exit", "mfe", "mae", "notes"];
+function exitEditMode() {
+  delete form.dataset.editId;
+  $("form-title").textContent = "Log a trade manually";
+  $("form-submit").textContent = "Add trade";
+  $("form-cancel").style.display = "none";
+  for (const k of ["time", "entry", "stop", "exit", "mfe", "mae", "notes", "confirm"]) form[k].value = "";
+  form.rules.checked = true;
+  $("form-msg").textContent = "";
+}
+function startEdit(id) {
+  const t = trades.find((x) => String(x.id) === id);
+  if (!t) return;
+  form.dataset.editId = id;
+  if (t.setup && ![...form.setup.options].some((o) => o.value === t.setup)) form.setup.add(new Option(t.setup));
+  for (const k of FORM_FIELDS) form[k].value = t[k] ?? "";
+  form.rules.checked = !!t.rules;
+  $("form-title").textContent = `Edit trade: ${t.date} ${t.time} ${t.side}`;
+  $("form-submit").textContent = "Save changes";
+  $("form-cancel").style.display = "";
+  $("form-msg").textContent = t.stopEstimated ? "Stop is a placeholder. Enter your real stop." : "";
+  renderJournal();
+  form.scrollIntoView({ behavior: "smooth", block: "start" });
+  (t.stopEstimated ? form.stop : form.setup).focus({ preventScroll: true });
+}
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const num = (k) => (form[k].value === "" ? null : parseFloat(form[k].value));
+  const editId = form.dataset.editId;
+  const t = {
+    id: editId ? trades.find((x) => String(x.id) === editId).id : Date.now(),
+    date: form.date.value, time: form.time.value, setup: form.setup.value, side: form.side.value,
+    contract: form.contract.value, qty: num("qty") || 1, entry: num("entry"), stop: num("stop"), exit: num("exit"),
+    mfe: num("mfe"), mae: num("mae"), rules: form.rules.checked, notes: form.notes.value.trim(), stopEstimated: false,
+    confirm: form.confirm.value, dayType: form.dayType.value,
+  };
+  const dir = t.side === "Short" ? -1 : 1;
+  if ((t.entry - t.stop) * dir <= 0) { $("form-msg").textContent = `For a ${t.side.toLowerCase()}, the stop must be ${dir > 0 ? "below" : "above"} the entry.`; return; }
+  if (editId) trades = trades.map((x) => (String(x.id) === editId ? t : x));
+  else trades.push(t);
+  saveTrades(); exitEditMode(); renderJournal();
+  if (!editId) form.entry.focus();
+});
+$("form-cancel").addEventListener("click", () => { exitEditMode(); renderJournal(); });
+$("j-trades").addEventListener("click", (e) => {
+  if (e.target.dataset.edit) return startEdit(e.target.dataset.edit);
+  const id = e.target.dataset.del;
+  if (!id || !confirm("Delete this trade?")) return;
+  if (form.dataset.editId === id) exitEditMode();
+  trades = trades.filter((t) => String(t.id) !== id); saveTrades(); renderJournal();
+});
+$("clear-all").addEventListener("click", () => {
+  if (!trades.length || !confirm(`Delete all ${trades.length} trades? Export a backup first if you might need them.`)) return;
+  trades = []; saveTrades(); exitEditMode(); renderJournal();
+});
+
+for (const [id, key, type] of [["imp-tz", "tz"], ["imp-datefmt", "datefmt"], ["imp-stop", "stop", "number"], ["imp-merge", "merge", "checkbox"]]) {
+  const el = $(id);
+  if (type === "checkbox") el.checked = impSettings[key]; else el.value = impSettings[key];
+  el.addEventListener("input", () => {
+    if (type === "checkbox") impSettings[key] = el.checked;
+    else if (type === "number") { const v = parseFloat(el.value); if (!(v > 0)) return; impSettings[key] = v; }
+    else impSettings[key] = el.value;
+    saveImpSettings();
+  });
+}
+const readFile = (file) => file && file.text().then(importFile);
+$("import").addEventListener("change", (e) => { readFile(e.target.files[0]); e.target.value = ""; });
+const drop = $("dropzone");
+window.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+window.addEventListener("dragleave", (e) => { if (!e.relatedTarget) drop.classList.remove("over"); });
+window.addEventListener("drop", (e) => {
+  e.preventDefault(); drop.classList.remove("over");
+  if (!$("tab-journal").classList.contains("active")) showTab("journal");
+  readFile(e.dataTransfer.files[0]);
+});
+$("j-targets").addEventListener("click", (e) => {
+  const T = e.target.dataset.sim;
+  if (!T) return;
+  cfg.plan.reward_risk = parseFloat(T);
+  cfg.plan.win_rate = parseFloat(e.target.dataset.p);
+  simSettings.source = "stats"; saveSimSettings();
+  renderPlanFields();
+  onPlanChange(); showTab("sim");
+});
+$("export").addEventListener("click", () => (trades.length ? exportCSV() : alert("No trades to export yet.")));
+$("run").addEventListener("click", renderSim);
+$("sims").addEventListener("input", scheduleSim);
+$("sweep-run").addEventListener("click", () => { $("sweep").innerHTML = '<p class="muted">Running…</p>'; setTimeout(runSweep, 20); });
+$("reset").addEventListener("click", () => {
+  if (!confirm("Reset all challenge rules and plan settings to defaults?")) return;
+  localStorage.removeItem(STORE_KEY); location.reload();
+});
+$("copy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText($("json").value); } catch (e) { $("json").select(); document.execCommand("copy"); }
+  $("copied").textContent = "Copied"; setTimeout(() => ($("copied").textContent = ""), 1500);
+});
+window.addEventListener("resize", () => {
+  if ($("tab-sim").classList.contains("active")) renderSim();
+  if ($("tab-journal").classList.contains("active")) renderJournal();
+});
+
+onRulesChange();
+</script>
+</body>
+</html>

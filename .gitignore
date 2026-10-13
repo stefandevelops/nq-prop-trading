@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv*/
+
+# Secrets
+.env
+.env.*
+
+# Market data, Nautilus catalogs and generated results
+backtest/data/
+backtest/results/
+signals/log/
+signals/levels.json
+dashboard/data.js
+Trading Desk.app/
+*.dbn
+*.dbn.zst

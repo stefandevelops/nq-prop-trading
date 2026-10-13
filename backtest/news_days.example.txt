@@ -1,0 +1,12 @@
+# Copy to news_days.txt and pass with --news-file backtest/news_days.txt
+# YYYY-MM-DD             -> skip the whole day (FOMC days, big-tech earnings mornings, ...)
+# YYYY-MM-DD HH:MM (ET)  -> no entries from 5 min before to 15 min after; open trades are closed
+# Anything after the date/time is a free-text label.
+2025-01-15 08:30 CPI
+2025-01-29 FOMC
+2025-02-07 08:30 NFP
+2025-02-12 08:30 CPI
+2025-02-13 08:30 PPI
+2025-03-07 08:30 NFP
+2025-03-12 08:30 CPI
+2025-03-19 FOMC

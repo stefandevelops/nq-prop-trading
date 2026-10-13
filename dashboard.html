@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NQ Desk Pro</title>
+<style>
+:root {
+  --bg: #0d0d0e; --card: #141415; --card2: #1a1a1c; --line: #262629; --line2: #333337;
+  --text: #ededee; --muted: #8d8d93; --dim: #5c5c62;
+  --teal: #2dd4bf; --teal-d: rgba(45, 212, 191, .13); --red: #f26d6d; --red-d: rgba(242, 109, 109, .13);
+  --purple: #a78bfa; --amber: #f5b94a;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 var(--sans); min-height: 100vh; }
+body::before { content: ""; position: fixed; top: -25vh; right: -15vw; width: 75vw; height: 80vh; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(139, 92, 246, .11), transparent); }
+body::after { content: ""; position: fixed; bottom: -30vh; left: -20vw; width: 60vw; height: 70vh; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(45, 212, 191, .05), transparent); }
+.wrap { position: relative; z-index: 1; max-width: 1500px; margin: 0 auto; padding: 18px 22px 48px; }
+header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; letter-spacing: .01em; }
+.logo { width: 28px; height: 28px; border: 1px solid var(--line2); border-radius: 8px; display: grid; place-items: center; background: var(--card); }
+.brand small { font: 500 10px var(--mono); color: var(--purple); border: 1px solid rgba(167, 139, 250, .35); border-radius: 5px; padding: 2px 5px; letter-spacing: .1em; }
+.spacer { flex: 1; }
+.label { font: 500 11px/1.25 var(--mono); text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+.mono { font-family: var(--mono); }
+.pill { font: 500 10.5px var(--mono); letter-spacing: .09em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, .35); color: var(--teal); background: var(--teal-d); white-space: nowrap; }
+.pill.red { border-color: rgba(242, 109, 109, .4); color: var(--red); background: var(--red-d); }
+.pill.gray { border-color: var(--line2); color: var(--muted); background: transparent; }
+.pill.amber { border-color: rgba(245, 185, 74, .4); color: var(--amber); background: rgba(245, 185, 74, .1); }
+.dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; margin-right: 7px; box-shadow: 0 0 8px currentColor; vertical-align: 1px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+.card-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 10px; }
+.card-h h2 { margin: 0; font-size: 14px; font-weight: 600; }
+.grid { display: grid; gap: 14px; margin-bottom: 14px; }
+.kpis { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.kpi .v { font-size: 27px; font-weight: 600; margin-top: 10px; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.kpi .s { color: var(--dim); font: 11.5px var(--mono); margin-top: 4px; }
+.main { grid-template-columns: 250px minmax(0, 1fr) 250px; }
+.row3 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.row4 { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+.pos { color: var(--teal); } .neg { color: var(--red); } .muted { color: var(--muted); } .dimc { color: var(--dim); }
+select, button { background: var(--card2); color: var(--text); border: 1px solid var(--line2); border-radius: 8px; padding: 6px 10px; font: 12px var(--mono); cursor: pointer; }
+button:hover, select:hover { border-color: #4a4a50; }
+a { color: var(--teal); text-decoration: none; }
+.nav { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.check { font: 11px var(--mono); color: var(--muted); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+canvas { display: block; width: 100%; }
+.chart-info { font: 11.5px var(--mono); color: var(--muted); min-height: 18px; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ladder */
+.ladder { font: 11.5px var(--mono); }
+.lrow { display: grid; grid-template-columns: 1fr 74px 1fr; align-items: center; height: 21px; position: relative; }
+.lrow .bar { height: 15px; border-radius: 2px; }
+.lrow .sell { justify-self: end; background: rgba(242, 109, 109, .32); }
+.lrow .buy { justify-self: start; background: rgba(45, 212, 191, .32); }
+.lrow .px { text-align: center; color: var(--muted); }
+.lrow.lvl .px { color: var(--text); }
+.lrow.hot { background: rgba(255, 255, 255, .05); border-radius: 4px; }
+.lrow .tag { position: absolute; font-size: 9.5px; letter-spacing: .05em; color: var(--purple); top: 3px; }
+.lrow .tag.l { left: 2px; } .lrow .tag.r { right: 2px; }
+.lhead { display: grid; grid-template-columns: 1fr 74px 1fr; margin-bottom: 6px; }
+.lhead span:nth-child(2) { text-align: center; } .lhead span:last-child { text-align: right; }
+
+/* tiles */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile { background: var(--card2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 11px; }
+.tile .v { font-size: 18px; font-weight: 600; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.daytrades { margin-top: 12px; display: flex; flex-direction: column; gap: 7px; max-height: 250px; overflow: auto; }
+.dt { border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; font: 11.5px var(--mono); cursor: pointer; }
+.dt:hover { border-color: var(--line2); }
+.dt .top { display: flex; justify-content: space-between; }
+.dt .sub { color: var(--dim); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* risk + progress */
+.checks { display: flex; flex-direction: column; gap: 9px; }
+.chk { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: center; font-size: 13px; }
+.chk .ic { width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 700; }
+.ic.ok { background: var(--teal-d); color: var(--teal); } .ic.bad { background: var(--red-d); color: var(--red); }
+.ic.warn { background: rgba(245, 185, 74, .13); color: var(--amber); } .ic.na { background: #222; color: var(--dim); }
+.chk .val { font: 11.5px var(--mono); color: var(--muted); text-align: right; }
+.meter { height: 8px; background: var(--card2); border: 1px solid var(--line); border-radius: 99px; overflow: hidden; margin-top: 8px; }
+.meter > div { height: 100%; border-radius: 99px; }
+.seg { display: grid; grid-template-columns: repeat(20, 1fr); gap: 3px; margin-top: 7px; }
+.seg i { height: 9px; border-radius: 2px; background: #252528; }
+.seg i.on { background: var(--teal); } .seg i.on.red { background: var(--red); } .seg i.on.gray { background: #8d8d93; } .seg i.on.amber { background: var(--amber); }
+.prog { margin-bottom: 14px; }
+.prog .top { display: flex; justify-content: space-between; font-size: 13px; }
+.prog .top span:last-child { font: 11.5px var(--mono); color: var(--muted); }
+.outcome { border: 1px solid var(--line); background: var(--card2); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 7px 12px; font-size: 13px; }
+.kv span:nth-child(even) { font: 12px var(--mono); text-align: right; }
+.kv span:nth-child(odd) { color: var(--muted); }
+
+/* table */
+.tbl-wrap { max-height: 380px; overflow: auto; }
+table { width: 100%; border-collapse: collapse; font: 12px var(--mono); }
+th { text-align: left; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; font-size: 10.5px;
+  position: sticky; top: 0; background: var(--card); padding: 7px 8px; border-bottom: 1px solid var(--line); }
+td { padding: 6px 8px; border-bottom: 1px solid #1e1e21; white-space: nowrap; }
+td.n, th.n { text-align: right; }
+tbody tr { cursor: pointer; } tbody tr:hover { background: rgba(255, 255, 255, .03); }
+tbody tr.sel { background: rgba(45, 212, 191, .07); }
+td.note { max-width: 230px; overflow: hidden; text-overflow: ellipsis; color: var(--dim); }
+.foot { color: var(--dim); font: 11px var(--mono); margin-top: 18px; line-height: 1.7; }
+.empty { color: var(--dim); font: 12px var(--mono); padding: 30px 0; text-align: center; }
+
+@media (max-width: 1250px) { .main { grid-template-columns: 1fr; } .row3 { grid-template-columns: 1fr 1fr; } .row4 { grid-template-columns: 1fr; } .kpis { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 720px) { .row3, .kpis { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 12 L6 6 L9 9 L14 3" stroke="#2dd4bf" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      NQ Desk <small>PRO</small>
+    </div>
+    <span class="pill" id="mode-pill"><span class="dot"></span>Replay</span>
+    <span class="spacer"></span>
+    <span class="label">Source</span>
+    <select id="run-sel"></select>
+    <a class="pill gray" href="app.html">Journal &amp; simulator →</a>
+  </header>
+
+  <section class="grid kpis">
+    <div class="card kpi"><div class="label">Net P&amp;L</div><div class="v" id="k-pnl">–</div><div class="s" id="k-pnl-s"></div></div>
+    <div class="card kpi"><div class="label">Trades</div><div class="v" id="k-trades">–</div><div class="s" id="k-trades-s"></div></div>
+    <div class="card kpi"><div class="label">Win rate</div><div class="v" id="k-win">–</div><div class="s" id="k-win-s"></div></div>
+    <div class="card kpi"><div class="label">Expectancy</div><div class="v" id="k-exp">–</div><div class="s" id="k-exp-s"></div></div>
+    <div class="card kpi"><div class="label">Challenge pass odds</div><div class="v" id="k-pass">–</div><div class="s" id="k-pass-s"></div></div>
+  </section>
+
+  <section class="grid main">
+    <div class="card">
+      <div class="card-h"><span class="label">Volume ladder</span><span class="pill gray" id="ladder-step"></span></div>
+      <div class="lhead label"><span>Sell</span><span>Price</span><span>Buy</span></div>
+      <div class="ladder" id="ladder"></div>
+    </div>
+    <div class="card">
+      <div class="card-h">
+        <div><h2 id="chart-title">Trading dashboard</h2></div>
+        <div class="nav">
+          <label class="check"><input type="checkbox" id="only-trades" checked> Trade days only</label>
+          <button id="prev">←</button>
+          <select id="day-sel"></select>
+          <button id="next">→</button>
+        </div>
+      </div>
+      <div class="chart-info" id="chart-info"></div>
+      <canvas id="chart" height="470"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-h"><span class="label">Session</span><span class="pill gray" id="sess-contract"></span></div>
+      <div class="tiles">
+        <div class="tile"><div class="label">Day P&amp;L</div><div class="v" id="t-pnl">–</div></div>
+        <div class="tile"><div class="label">Trades</div><div class="v" id="t-trades">–</div></div>
+        <div class="tile"><div class="label">RTH range</div><div class="v" id="t-range">–</div></div>
+        <div class="tile"><div class="label">RTH volume</div><div class="v" id="t-vol">–</div></div>
+      </div>
+      <div class="daytrades" id="daytrades"></div>
+    </div>
+  </section>
+
+  <section class="grid row3">
+    <div class="card">
+      <div class="card-h"><h2>Risk engine</h2><span class="pill" id="risk-pill"><span class="dot"></span>All checks pass</span></div>
+      <div class="checks" id="checks"></div>
+      <div style="margin-top:16px"><div class="prog"><div class="top"><span class="label">Drawdown used (peak)</span><span id="exp-val"></span></div><div class="meter"><div id="exp-bar"></div></div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Challenge progress</h2><span class="pill gray" id="prog-pill"></span></div>
+      <div id="progress"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Tape</h2><span class="pill gray" id="tape-date"></span></div>
+      <div id="tape"></div>
+      <div class="label" style="margin:14px 0 6px">RTH volume by session</div>
+      <canvas id="tape-chart" height="70"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Challenge rules</h2><span class="pill gray" id="rules-ver"></span></div>
+      <div class="kv" id="rules"></div>
+    </div>
+  </section>
+
+  <section class="grid row4">
+    <div class="card">
+      <div class="card-h"><h2>Equity vs challenge lines</h2><span class="label" id="eq-note"></span></div>
+      <canvas id="equity" height="330"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Trades</h2><span class="label" id="tbl-note">Click a row to open the day</span></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Date</th><th>Time</th><th>Side</th><th class="n">Qty</th><th class="n">Entry</th><th class="n">Stop</th><th class="n">Exit</th><th class="n">R</th><th class="n">P&amp;L</th><th>Notes</th></tr></thead>
+        <tbody id="tbl"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script src="dashboard/data.js"></script>
+<script>
+const D = window.DASHBOARD_DATA;
+const CONTRACTS = { NQ: { pv: 20, tick: 0.25 }, MNQ: { pv: 2, tick: 0.25 } };
+const C = { teal: "#2dd4bf", red: "#f26d6d", purple: "#a78bfa", amber: "#f5b94a", text: "#ededee", muted: "#8d8d93", dim: "#5c5c62", line: "#262629", grid: "#1d1d20" };
+const $ = (id) => document.getElementById(id);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const money = (v, d = 0) => (v < 0 ? "-$" : "$") + Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+const smoney = (v, d = 0) => (v > 0 ? "+" : "") + money(v, d);
+const pct = (v, d = 0) => (100 * v).toFixed(d) + "%";
+const fmtPx = (v) => v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtR = (v) => (v > 0 ? "+" : "") + v.toFixed(2) + "R";
+const hhmm = (m) => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+const kfmt = (v) => (Math.abs(v) >= 1e6 ? (v / 1e6).toFixed(2) + "M" : Math.abs(v) >= 1e3 ? (v / 1e3).toFixed(1) + "k" : String(v));
+const cls = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "");
+function deepMerge(a, b) {
+  for (const k in b) {
+    if (b[k] && typeof b[k] === "object" && a[k] && typeof a[k] === "object") deepMerge(a[k], b[k]);
+    else a[k] = b[k];
+  }
+  return a;
+}
+function mulberry32(a) {
+  return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+
+if (!D) {
+  document.body.innerHTML = '<div class="wrap empty">dashboard/data.js not found. Run: .venv-nautilus/bin/python backtest/build_dashboard.py</div>';
+  throw new Error("missing dashboard data");
+}
+
+// Rules edited on the app.html "Challenge rules" tab take precedence over challenge.json.
+let rules = clone(D.rules);
+try {
+  const s = JSON.parse(localStorage.getItem("propToolkit.v1"));
+  if (s && s.rules_version === rules.rules_version) rules = deepMerge(rules, s);
+} catch (e) {}
+
+const costPer = (s) => rules.costs[s].commission_rt + rules.costs[s].slippage_ticks * CONTRACTS[s].pv * CONTRACTS[s].tick;
+function threshold(hwm) {
+  if (rules.drawdown_type === "static") return rules.starting_balance - rules.max_drawdown;
+  let t = hwm - rules.max_drawdown;
+  if (rules.trail_lock_balance != null) t = Math.min(t, rules.trail_lock_balance);
+  return t;
+}
+function metrics(t) {
+  const c = t.contract in CONTRACTS ? t.contract : "MNQ", dir = t.side === "Short" ? -1 : 1;
+  const risk = Math.abs(t.entry - t.stop), pts = (t.exit - t.entry) * dir;
+  return { ...t, contract: c, dir, risk, pts, R: risk > 0 ? pts / risk : 0, usd: pts * CONTRACTS[c].pv * t.qty - costPer(c) * t.qty };
+}
+
+const dayIndex = Object.fromEntries(D.days.map((d, i) => [d.date, i]));
+const runs = D.runs.map((r) => ({ ...r }));
+try {
+  const j = JSON.parse(localStorage.getItem("propToolkit.journal.v1")) || [];
+  if (j.length) runs.unshift({ id: "journal", label: `My journal (${j.length} trades)`, journal: true, trades: j.map((t) => {
+    const [h, m] = String(t.time || "00:00").split(":").map(Number);
+    return { ...t, entryMin: h * 60 + m, exitMin: null };
+  }) });
+} catch (e) {}
+
+const state = { run: null, dayDate: null, onlyTrades: true, hoverMin: null, hoverPx: null, selTrade: null };
+
+function computeRun(run) {
+  const trades = run.trades.filter((t) => t.entry != null && t.exit != null && t.stop != null).map(metrics)
+    .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+  const byDate = {};
+  trades.forEach((t) => (byDate[t.date] = byDate[t.date] || []).push(t));
+  const tradeDates = Object.keys(byDate).sort();
+  let sessions;
+  if (run.journal) sessions = tradeDates;
+  else sessions = D.days.map((d) => d.date).filter((d) => d >= tradeDates[0] && d <= tradeDates[tradeDates.length - 1]);
+
+  // One account, trades taken in order. The soft daily loss limit flattens the account for the rest of that day.
+  const start = rules.starting_balance, targetBal = start + rules.profit_target, dll = rules.daily_loss_limit;
+  let bal = start, hwm = start, outcome = null, minBuffer = rules.max_drawdown, dllHits = 0;
+  let worstDay = 0, bestDay = 0, maxQty = 0, largestLoss = 0, skipped = 0;
+  const points = [{ bal, thr: threshold(hwm), t: null }];
+  sessions.forEach((date, i) => {
+    const thr = threshold(hwm);
+    let dayPnl = 0, stopped = false;
+    for (const t of byDate[date] || []) {
+      if (stopped) { t.skipped = true; skipped++; continue; }
+      t.skipped = false;
+      bal += t.usd; dayPnl += t.usd;
+      maxQty = Math.max(maxQty, t.qty);
+      largestLoss = Math.min(largestLoss, t.usd);
+      minBuffer = Math.min(minBuffer, bal - thr);
+      points.push({ bal, thr, t });
+      if (!outcome && bal <= thr) outcome = { kind: "fail", date, session: i + 1, bal };
+      if (dll && dayPnl <= -dll) { dllHits++; stopped = true; }
+    }
+    if (rules.drawdown_type !== "intraday_trailing") hwm = Math.max(hwm, bal);
+    worstDay = Math.min(worstDay, dayPnl); bestDay = Math.max(bestDay, dayPnl);
+    if (!outcome && bal >= targetBal && i + 1 >= (rules.min_trading_days || 0)
+        && (rules.consistency_pct == null || bestDay <= rules.consistency_pct * (bal - start)))
+      outcome = { kind: "pass", date, session: i + 1, bal };
+  });
+  const wins = trades.filter((t) => t.usd > 0);
+  const net = trades.reduce((s, t) => s + t.usd, 0);
+  const grossW = wins.reduce((s, t) => s + t.usd, 0), grossL = -trades.filter((t) => t.usd <= 0).reduce((s, t) => s + t.usd, 0);
+  const contract = trades[0]?.contract || "MNQ";
+  return {
+    run, trades, byDate, tradeDates, sessions, points, outcome, bal, hwm, minBuffer, dllHits, worstDay, bestDay, maxQty, largestLoss, skipped, contract, net,
+    winRate: trades.length ? wins.length / trades.length : 0,
+    expR: trades.length ? trades.reduce((s, t) => s + t.R, 0) / trades.length : 0,
+    expUsd: trades.length ? net / trades.length : 0,
+    pf: grossL ? grossW / grossL : null,
+    sim: simulate(sessions.map((d) => (byDate[d] || []).map((t) => t.usd)), 5000),
+    simTraded: run.journal ? null : simulate(tradeDates.map((d) => byDate[d].map((t) => t.usd)), 5000),
+  };
+}
+
+// Day-block bootstrap: each simulated challenge day is a random real session from this source, its trades kept in order.
+function simulate(days, sims) {
+  if (!days.length) return null;
+  const rng = mulberry32(42), start = rules.starting_balance, targetBal = start + rules.profit_target, dll = rules.daily_loss_limit;
+  const maxDays = rules.plan.max_days, out = { pass: 0, fail: 0, timeout: 0, passDays: [] };
+  for (let s = 0; s < sims; s++) {
+    let bal = start, hwm = start, best = 0, res = "timeout";
+    for (let day = 1; day <= maxDays && res === "timeout"; day++) {
+      const thr = threshold(hwm);
+      let dayPnl = 0;
+      for (const usd of days[Math.floor(rng() * days.length)]) {
+        bal += usd; dayPnl += usd;
+        if (bal <= thr) { res = "fail"; break; }
+        if (dll && dayPnl <= -dll) break;
+      }
+      if (res !== "timeout") break;
+      hwm = Math.max(hwm, bal); best = Math.max(best, dayPnl);
+      if (bal >= targetBal && day >= (rules.min_trading_days || 0) && (rules.consistency_pct == null || best <= rules.consistency_pct * (bal - start))) {
+        res = "pass"; out.passDays.push(day);
+      }
+    }
+    out[res]++;
+  }
+  out.passDays.sort((a, b) => a - b);
+  return { pass: out.pass / sims, fail: out.fail / sims, timeout: out.timeout / sims, median: out.passDays[Math.floor(out.passDays.length / 2)] || null, sims };
+}
+
+// ---------- canvas helpers ----------
+function setupCanvas(cv) {
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.getAttribute("height") * 1;
+  cv.style.height = h + "px";
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  return { ctx, w, h };
+}
+function niceStep(range, n) {
+  const raw = range / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  return [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw) || 10 * mag;
+}
+
+// ---------- rendering ----------
+function renderKpis(R) {
+  const n = R.trades.length;
+  $("k-pnl").textContent = smoney(R.net); $("k-pnl").className = "v " + cls(R.net);
+  $("k-pnl-s").textContent = `after est. costs · PF ${R.pf == null ? "–" : R.pf.toFixed(2)}`;
+  $("k-trades").textContent = n;
+  $("k-trades-s").textContent = `${R.tradeDates.length} trade days / ${R.sessions.length} sessions`;
+  $("k-win").textContent = pct(R.winRate, 1);
+  $("k-win-s").textContent = `${R.trades.filter((t) => t.usd > 0).length}W · ${R.trades.filter((t) => t.usd <= 0).length}L`;
+  $("k-exp").textContent = fmtR(R.expR); $("k-exp").className = "v " + cls(R.expR);
+  $("k-exp-s").textContent = `${smoney(R.expUsd)} per trade`;
+  if (R.sim) {
+    $("k-pass").textContent = pct(R.sim.pass, 1);
+    $("k-pass").className = "v " + (R.sim.pass >= 0.5 ? "pos" : R.sim.pass < 0.25 ? "neg" : "");
+    $("k-pass-s").textContent = `fail ${pct(R.sim.fail)} · timeout ${pct(R.sim.timeout)}`
+      + (R.simTraded ? ` · signal days ${pct(R.simTraded.pass)}` : ` · ${R.sim.sims.toLocaleString()} sims`);
+  }
+}
+
+function renderRisk(R) {
+  const maxC = rules.max_contracts[R.contract], usedDD = rules.max_drawdown - R.minBuffer;
+  const breached = R.outcome?.kind === "fail";
+  const checks = [
+    { name: "Trailing drawdown", ok: breached ? "bad" : "ok", val: `${money(Math.max(0, usedDD))} / ${money(rules.max_drawdown)}` },
+    rules.daily_loss_limit
+      ? { name: "Daily loss limit", ok: R.dllHits ? "warn" : "ok", val: `worst ${money(R.worstDay)} / -${money(rules.daily_loss_limit)}${R.dllHits ? ` · ${R.dllHits} hit` : ""}` }
+      : { name: "Daily loss limit", ok: "na", val: "none" },
+    { name: "Position limit", ok: R.maxQty <= maxC ? "ok" : "bad", val: `${R.maxQty} / ${maxC} ${R.contract}` },
+    { name: "Single position loss", ok: -R.largestLoss < 500 ? "ok" : "warn", val: `${money(R.largestLoss)} (alt. $500 rule)` },
+    { name: "Consistency", ok: rules.consistency_pct == null ? "na" : "ok", val: rules.consistency_pct == null ? "not in challenge" : pct(rules.consistency_pct) },
+  ];
+  const icon = { ok: "✓", bad: "✕", warn: "!", na: "–" };
+  $("checks").innerHTML = checks.map((c) => `<div class="chk"><span class="ic ${c.ok}">${icon[c.ok]}</span><span>${c.name}</span><span class="val">${c.val}</span></div>`).join("");
+  const fails = checks.filter((c) => c.ok === "bad").length, warns = checks.filter((c) => c.ok === "warn").length;
+  $("risk-pill").className = "pill" + (fails ? " red" : warns ? " amber" : "");
+  $("risk-pill").innerHTML = `<span class="dot"></span>${fails ? `${fails} check${fails > 1 ? "s" : ""} failed` : warns ? `${warns} warning${warns > 1 ? "s" : ""}` : "All checks pass"}`;
+  const f = Math.min(1, Math.max(0, usedDD / rules.max_drawdown));
+  $("exp-val").textContent = pct(f);
+  $("exp-bar").style.width = pct(f, 1);
+  $("exp-bar").style.background = f >= 1 ? C.red : f > 0.6 ? C.amber : C.teal;
+}
+
+function segs(frac, color = "") {
+  const on = Math.round(Math.min(1, Math.max(0, frac)) * 20);
+  return `<div class="seg">${Array.from({ length: 20 }, (_, i) => `<i class="${i < on ? "on " + color : ""}"></i>`).join("")}</div>`;
+}
+function renderProgress(R) {
+  const start = rules.starting_balance, profit = R.bal - start, o = R.outcome;
+  const peakProfit = Math.max(0, ...R.points.map((p) => p.bal - start));
+  const endThr = threshold(R.hwm), buffer = R.bal - endThr;
+  const sessionsToOutcome = o ? o.session : R.sessions.length;
+  const rows = [
+    ["Profit target", `${smoney(profit)} / ${money(rules.profit_target)}`, profit / rules.profit_target, profit >= 0 ? "" : "red"],
+    ["Peak profit reached", money(peakProfit), peakProfit / rules.profit_target, "gray"],
+    ["Drawdown buffer left", `${money(buffer)} / ${money(rules.max_drawdown)}`, buffer / rules.max_drawdown, buffer < rules.max_drawdown * 0.4 ? "amber" : ""],
+    ["Sessions used", `${sessionsToOutcome} / ${rules.plan.max_days}`, sessionsToOutcome / rules.plan.max_days, sessionsToOutcome > rules.plan.max_days ? "red" : "gray"],
+  ];
+  const outcomeText = !o
+    ? `<span class="muted">Neither target nor drawdown reached over ${R.sessions.length} sessions.</span>`
+    : o.kind === "pass"
+      ? `<span class="pos">● Passed</span> on session ${o.session} (${o.date})${o.session > rules.plan.max_days ? ` <span class="neg">— too late for a ${rules.plan.max_days}-day window</span>` : ""}`
+      : `<span class="neg">● Failed</span> on session ${o.session} (${o.date}) at ${money(o.bal)}`;
+  $("progress").innerHTML = rows.map(([n, v, f, c]) => `<div class="prog"><div class="top"><span>${n}</span><span>${v}</span></div>${segs(f, c)}</div>`).join("")
+    + `<div class="outcome">${outcomeText}<div class="dimc mono" style="font-size:11px;margin-top:4px">One account, every trade in order${R.skipped ? ` · ${R.skipped} skipped after daily limit` : ""}</div></div>`;
+  $("prog-pill").textContent = o ? o.kind.toUpperCase() : "OPEN";
+  $("prog-pill").className = "pill " + (o?.kind === "pass" ? "" : o?.kind === "fail" ? "red" : "gray");
+}
+
+function renderRules() {
+  const r = rules, lines = [
+    ["Firm / account", `${r.firm} ${r.starting_balance / 1000}K`],
+    ["Version", r.account?.replace("Futures Core 50K ", "") || "–"],
+    ["Profit target", money(r.profit_target)],
+    ["Max drawdown", `${money(r.max_drawdown)} ${r.drawdown_type.replace("_", " ").replace("eod", "EOD")}`],
+    ["Trail locks at", r.trail_lock_balance != null ? money(r.trail_lock_balance) : "never"],
+    ["Daily loss limit", r.daily_loss_limit ? `${money(r.daily_loss_limit)} ${r.daily_loss_limit_hard_fail ? "(hard)" : "(soft)"}` : "none"],
+    ["Consistency", r.consistency_pct == null ? "none" : pct(r.consistency_pct)],
+    ["Max contracts", `${r.max_contracts.NQ} NQ / ${r.max_contracts.MNQ} MNQ`],
+    ["Costs + slippage RT", `NQ ${money(costPer("NQ"), 2)} · MNQ ${money(costPer("MNQ"), 2)}`],
+    ["Fee", r.challenge_fee ? money(r.challenge_fee) : "–"],
+  ];
+  $("rules").innerHTML = lines.map(([k, v]) => `<span>${k}</span><span>${esc(v)}</span>`).join("");
+  $("rules-ver").textContent = "v" + r.rules_version;
+}
+
+function visibleDays(R) {
+  const list = state.onlyTrades ? R.tradeDates : R.sessions;
+  return list.filter((d) => d in dayIndex);
+}
+function renderDaySelect(R) {
+  const days = visibleDays(R);
+  if (!days.includes(state.dayDate)) state.dayDate = days[0] || null;
+  $("day-sel").innerHTML = days.map((d) => {
+    const n = (R.byDate[d] || []).length, pnl = (R.byDate[d] || []).reduce((s, t) => s + t.usd, 0);
+    const wd = new Date(d + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short" });
+    return `<option value="${d}">${wd} ${d}${n ? ` · ${n}t ${smoney(pnl)}` : ""}</option>`;
+  }).join("") || '<option value="">no tick data</option>';
+  $("day-sel").value = state.dayDate || "";
+}
+
+function renderDay(R) {
+  const day = D.days[dayIndex[state.dayDate]];
+  const trades = R.byDate[state.dayDate] || [];
+  const pnl = trades.reduce((s, t) => s + t.usd, 0);
+  $("t-pnl").textContent = trades.length ? smoney(pnl) : "–"; $("t-pnl").className = "v " + cls(pnl);
+  $("t-trades").textContent = trades.length;
+  $("t-range").textContent = day ? (day.rth.h - day.rth.l).toFixed(2) : "–";
+  $("t-vol").textContent = day ? kfmt(day.rth.v) : "–";
+  $("sess-contract").textContent = day ? `NQ · id ${day.contract}` : "–";
+  $("chart-title").textContent = day ? `NQ · ${new Date(state.dayDate + "T12:00:00").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short", year: "numeric" })}` : "No tick data for this day";
+  $("daytrades").innerHTML = trades.map((t, i) => `<div class="dt" data-i="${i}"><div class="top"><span class="${t.side === "Long" ? "pos" : "neg"}">${t.side.toUpperCase()} ${t.qty} ${t.contract}</span><span class="${cls(t.usd)}">${smoney(t.usd)}</span></div>
+    <div class="sub">${t.time} · ${fmtPx(t.entry)} → ${fmtPx(t.exit)} · ${fmtR(t.R)}${t.skipped ? " · skipped" : ""}</div><div class="sub">${esc(t.notes)}</div></div>`).join("")
+    || '<div class="empty">No trades this session</div>';
+  document.querySelectorAll(".dt").forEach((el) => el.onclick = () => { state.selTrade = trades[+el.dataset.i]; drawChart(R); renderTable(R); });
+  drawChart(R);
+  renderLadder(day);
+  renderTape(R, day);
+}
+
+function chartInfo(day, b, i) {
+  if (!day || i == null) {
+    if (!day) return "";
+    const lv = day.levels.map((l) => `${l.name} ${fmtPx(l.price)}`).join("  ·  ");
+    return lv;
+  }
+  const d = b.d[i];
+  return `${hhmm(b.t[i])} ET   O ${fmtPx(b.o[i])}  H ${fmtPx(b.h[i])}  L ${fmtPx(b.l[i])}  C ${fmtPx(b.c[i])}   VOL ${b.v[i].toLocaleString()}   Δ <span class="${cls(d)}">${d > 0 ? "+" : ""}${d}</span>${b.vwap[i] ? `   VWAP ${fmtPx(b.vwap[i])}` : ""}`;
+}
+
+function drawChart(R) {
+  const cv = $("chart"), { ctx, w, h } = setupCanvas(cv);
+  const day = D.days[dayIndex[state.dayDate]];
+  if (!day || !day.bars.t.length) {
+    ctx.fillStyle = C.dim; ctx.font = "12px ui-monospace, Menlo, monospace"; ctx.textAlign = "center";
+    ctx.fillText(R.run.journal ? "No Databento tick data for this date (data covers Jul–Sep 2026)" : "No data", w / 2, h / 2);
+    $("chart-info").innerHTML = "";
+    return;
+  }
+  const b = day.bars, trades = R.byDate[state.dayDate] || [];
+  const padR = 70, padL = 8, top = 8, priceH = Math.round(h * 0.76), deltaTop = priceH + 18, deltaH = h - deltaTop - 20;
+  const t0 = 510, t1 = 750, X = (m) => padL + ((m - t0 + 0.5) / (t1 - t0)) * (w - padL - padR);
+  const bw = Math.max(1, ((w - padL - padR) / (t1 - t0)) * 0.7);
+  let lo = Math.min(...b.l), hi = Math.max(...b.h);
+  trades.forEach((t) => { lo = Math.min(lo, t.stop, t.exit); hi = Math.max(hi, t.stop, t.exit); });
+  const pad = (hi - lo) * 0.06; lo -= pad; hi += pad;
+  const Y = (p) => top + (1 - (p - lo) / (hi - lo)) * (priceH - top);
+
+  // grid + price axis
+  ctx.font = "10.5px ui-monospace, Menlo, monospace"; ctx.textBaseline = "middle";
+  const step = niceStep(hi - lo, 7);
+  for (let p = Math.ceil(lo / step) * step; p <= hi; p += step) {
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(padL, Math.round(Y(p)) + 0.5); ctx.lineTo(w - padR, Math.round(Y(p)) + 0.5); ctx.stroke();
+    ctx.fillStyle = C.dim; ctx.textAlign = "left"; ctx.fillText(fmtPx(p), w - padR + 8, Y(p));
+  }
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let m = 540; m <= 720; m += 30) {
+    ctx.strokeStyle = m === 570 || m === 630 ? "#2c2c31" : C.grid; ctx.setLineDash(m === 570 || m === 630 ? [3, 3] : []);
+    ctx.beginPath(); ctx.moveTo(X(m) - 0.5, top); ctx.lineTo(X(m) - 0.5, h - 18); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = C.dim; ctx.fillText(hhmm(m), X(m), h - 14);
+  }
+  ctx.fillStyle = C.dim; ctx.textAlign = "left"; ctx.fillText("OPEN", X(570) + 4, top + 2); ctx.fillText("IB END", X(630) + 4, top + 2);
+
+  // levels
+  ctx.textBaseline = "middle";
+  const offAbove = [], offBelow = [];
+  for (const l of day.levels) {
+    if (l.price > hi) { offAbove.push(l); continue; }
+    if (l.price < lo) { offBelow.push(l); continue; }
+    const y = Math.round(Y(l.price)) + 0.5, structural = l.kind === "structural";
+    ctx.strokeStyle = structural ? "rgba(167,139,250,.55)" : "rgba(141,141,147,.35)"; ctx.setLineDash(structural ? [6, 4] : [2, 4]);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w - padR, y); ctx.stroke(); ctx.setLineDash([]);
+    const label = `${l.name} ${fmtPx(l.price)}`, tw = ctx.measureText(label).width + 10;
+    ctx.fillStyle = "#141415"; ctx.fillRect(padL + 2, y - 8, tw, 16);
+    ctx.fillStyle = structural ? C.purple : C.muted; ctx.textAlign = "left"; ctx.fillText(label, padL + 7, y);
+  }
+  ctx.fillStyle = C.dim; ctx.textAlign = "left";
+  if (offAbove.length) ctx.fillText("↑ " + offAbove.map((l) => `${l.name} ${fmtPx(l.price)}`).join("  "), padL + 4, top + 22);
+  if (offBelow.length) ctx.fillText("↓ " + offBelow.map((l) => `${l.name} ${fmtPx(l.price)}`).join("  "), padL + 4, priceH - 10);
+
+  // candles
+  for (let i = 0; i < b.t.length; i++) {
+    const x = X(b.t[i]), up = b.c[i] >= b.o[i], col = up ? C.teal : C.red;
+    const rth = b.t[i] >= 570;
+    ctx.globalAlpha = rth ? 1 : 0.45;
+    ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(Math.round(x) + 0.5, Y(b.h[i])); ctx.lineTo(Math.round(x) + 0.5, Y(b.l[i])); ctx.stroke();
+    const y1 = Y(Math.max(b.o[i], b.c[i])), y2 = Y(Math.min(b.o[i], b.c[i]));
+    ctx.fillRect(Math.round(x - bw / 2), y1, Math.max(1, Math.round(bw)), Math.max(1, y2 - y1));
+  }
+  ctx.globalAlpha = 1;
+
+  // VWAP
+  ctx.strokeStyle = C.amber; ctx.lineWidth = 1.4; ctx.beginPath();
+  let started = false;
+  b.vwap.forEach((v, i) => { if (v == null) return; const x = X(b.t[i]), y = Y(v); started ? ctx.lineTo(x, y) : ctx.moveTo(x, y); started = true; });
+  ctx.stroke(); ctx.lineWidth = 1;
+  const lastV = b.vwap.map((v, i) => [v, i]).filter(([v]) => v != null).pop();
+  if (lastV) { ctx.fillStyle = C.amber; ctx.textAlign = "right"; ctx.fillText("VWAP", X(b.t[lastV[1]]) - 4, Y(lastV[0]) - 9); }
+
+  // trades
+  for (const t of trades) {
+    const xe = X(t.entryMin), xx = X(t.exitMin ?? Math.min(t1 - 1, t.entryMin + 15)), sel = state.selTrade === t;
+    const target = t.entry + t.dir * t.risk;
+    ctx.globalAlpha = t.skipped ? 0.35 : 1;
+    ctx.fillStyle = "rgba(242,109,109,.10)"; ctx.fillRect(xe, Math.min(Y(t.entry), Y(t.stop)), Math.max(3, xx - xe), Math.abs(Y(t.stop) - Y(t.entry)));
+    ctx.fillStyle = "rgba(45,212,191,.09)"; ctx.fillRect(xe, Math.min(Y(t.entry), Y(target)), Math.max(3, xx - xe), Math.abs(Y(target) - Y(t.entry)));
+    ctx.setLineDash([3, 3]); ctx.strokeStyle = C.red; ctx.beginPath(); ctx.moveTo(xe, Y(t.stop)); ctx.lineTo(xx, Y(t.stop)); ctx.stroke();
+    ctx.strokeStyle = C.teal; ctx.beginPath(); ctx.moveTo(xe, Y(target)); ctx.lineTo(xx, Y(target)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = sel ? "#fff" : "rgba(237,237,238,.6)"; ctx.lineWidth = sel ? 1.6 : 1;
+    ctx.beginPath(); ctx.moveTo(xe, Y(t.entry)); ctx.lineTo(xx, Y(t.exit)); ctx.stroke(); ctx.lineWidth = 1;
+    const ye = Y(t.entry), s = sel ? 7 : 6;
+    ctx.fillStyle = t.side === "Long" ? C.teal : C.red; ctx.beginPath();
+    if (t.side === "Long") { ctx.moveTo(xe, ye); ctx.lineTo(xe - s, ye + s * 1.4); ctx.lineTo(xe + s, ye + s * 1.4); }
+    else { ctx.moveTo(xe, ye); ctx.lineTo(xe - s, ye - s * 1.4); ctx.lineTo(xe + s, ye - s * 1.4); }
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#141415"; ctx.strokeStyle = t.usd > 0 ? C.teal : C.red; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(xx, Y(t.exit), 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.lineWidth = 1;
+    ctx.fillStyle = t.usd > 0 ? C.teal : C.red; ctx.textAlign = "left"; ctx.fillText(smoney(t.usd), xx + 7, Y(t.exit));
+    ctx.globalAlpha = 1;
+  }
+
+  // delta histogram
+  const maxD = Math.max(1, ...b.d.map(Math.abs)), mid = deltaTop + deltaH / 2;
+  ctx.fillStyle = C.dim; ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText("DELTA (BUY − SELL AGGRESSOR)", padL, priceH + 3);
+  ctx.strokeStyle = C.grid; ctx.beginPath(); ctx.moveTo(padL, mid + 0.5); ctx.lineTo(w - padR, mid + 0.5); ctx.stroke();
+  for (let i = 0; i < b.t.length; i++) {
+    const v = b.d[i], hh = (Math.abs(v) / maxD) * (deltaH / 2);
+    ctx.fillStyle = v >= 0 ? "rgba(45,212,191,.7)" : "rgba(242,109,109,.7)";
+    ctx.fillRect(Math.round(X(b.t[i]) - bw / 2), v >= 0 ? mid - hh : mid, Math.max(1, Math.round(bw)), Math.max(0.5, hh));
+  }
+  ctx.textBaseline = "middle"; ctx.fillStyle = C.dim; ctx.fillText("±" + maxD, w - padR + 8, mid);
+
+  // crosshair
+  let hi_ = null;
+  if (state.hoverMin != null) {
+    hi_ = b.t.findIndex((m) => m === state.hoverMin);
+    if (hi_ < 0) hi_ = null;
+    const x = X(state.hoverMin);
+    ctx.strokeStyle = "rgba(237,237,238,.25)"; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, h - 18); ctx.stroke();
+    if (state.hoverY != null && state.hoverY < priceH) {
+      ctx.beginPath(); ctx.moveTo(padL, state.hoverY); ctx.lineTo(w - padR, state.hoverY); ctx.stroke();
+      const p = lo + (1 - (state.hoverY - top) / (priceH - top)) * (hi - lo);
+      state.hoverPx = p;
+      ctx.setLineDash([]); ctx.fillStyle = "#2a2a2e"; ctx.fillRect(w - padR + 2, state.hoverY - 9, padR - 4, 18);
+      ctx.fillStyle = C.text; ctx.textAlign = "left"; ctx.fillText(fmtPx(Math.round(p * 4) / 4), w - padR + 7, state.hoverY);
+    } else state.hoverPx = null;
+    ctx.setLineDash([]);
+  }
+  $("chart-info").innerHTML = chartInfo(day, b, hi_);
+  cv._geom = { X, t0, t1, padL, padR, w };
+}
+
+function renderLadder(day) {
+  const el = $("ladder");
+  if (!day) { el.innerHTML = '<div class="empty">–</div>'; $("ladder-step").textContent = ""; return; }
+  const b = day.bars, rows = 22;
+  const lo = Math.min(...b.l), hi = Math.max(...b.h);
+  const step = niceStep(hi - lo, rows - 2);
+  const base = Math.floor(lo / step) * step, n = Math.ceil((hi - base) / step) + 1;
+  const buy = new Array(n).fill(0), sell = new Array(n).fill(0);
+  for (let i = 0; i < b.t.length; i++) {
+    const k = Math.min(n - 1, Math.max(0, Math.floor(((b.h[i] + b.l[i] + b.c[i]) / 3 - base) / step)));
+    const bv = (b.v[i] + b.d[i]) / 2;
+    buy[k] += bv; sell[k] += b.v[i] - bv;
+  }
+  const max = Math.max(1, ...buy, ...sell);
+  const hotPx = state.hoverPx ?? (state.selTrade ? state.selTrade.entry : null);
+  let html = "";
+  for (let k = n - 1; k >= 0; k--) {
+    const p0 = base + k * step, p1 = p0 + step;
+    const lv = day.levels.filter((l) => l.price >= p0 && l.price < p1);
+    const hot = hotPx != null && hotPx >= p0 && hotPx < p1;
+    html += `<div class="lrow${lv.length ? " lvl" : ""}${hot ? " hot" : ""}">
+      <div class="bar sell" style="width:${(sell[k] / max) * 100}%"></div>
+      <div class="px">${fmtPx(p0)}</div>
+      <div class="bar buy" style="width:${(buy[k] / max) * 100}%"></div>
+      ${lv.length ? `<span class="tag r">${lv.map((l) => l.name).join(" ")}</span>` : ""}</div>`;
+  }
+  el.innerHTML = html;
+  $("ladder-step").textContent = `${step} pt rows`;
+}
+
+function renderTape(R, day) {
+  $("tape-date").textContent = day ? day.date : "–";
+  if (!day || !day.tape) { $("tape").innerHTML = '<div class="empty">No tape data</div>'; }
+  else {
+    const t = day.tape, tot = t.buy + t.sell, net = t.buy - t.sell;
+    $("tape").innerHTML = `
+      <div class="prog"><div class="top"><span>Buy aggressor</span><span>${t.buy.toLocaleString()} · ${pct(t.buy / tot)}</span></div>${segs(t.buy / tot)}</div>
+      <div class="prog"><div class="top"><span>Sell aggressor</span><span>${t.sell.toLocaleString()} · ${pct(t.sell / tot)}</span></div>${segs(t.sell / tot, "red")}</div>
+      <div class="kv"><span>RTH prints</span><span>${t.trades.toLocaleString()}</span><span>Net delta</span><span class="${cls(net)}">${net > 0 ? "+" : ""}${net.toLocaleString()}</span><span>Largest print</span><span>${t.maxTrade} lots</span></div>`;
+  }
+  const cv = $("tape-chart"), { ctx, w, h } = setupCanvas(cv);
+  const days = R.sessions.filter((d) => d in dayIndex).map((d) => D.days[dayIndex[d]]);
+  if (!days.length) return;
+  const max = Math.max(...days.map((d) => d.rth.v)), bw = w / days.length;
+  days.forEach((d, i) => {
+    const hh = (d.rth.v / max) * (h - 4), sel = d.date === state.dayDate, traded = !!R.byDate[d.date];
+    ctx.fillStyle = sel ? C.teal : traded ? "rgba(167,139,250,.6)" : "#2c2c31";
+    ctx.fillRect(i * bw + 1, h - hh, Math.max(1, bw - 2), hh);
+  });
+  cv._days = days.map((d) => d.date);
+}
+
+function drawEquity(R) {
+  const cv = $("equity"), { ctx, w, h } = setupCanvas(cv);
+  const pts = R.points, start = rules.starting_balance, target = start + rules.profit_target;
+  const padL = 62, padR = 14, top = 12, bot = 26;
+  let lo = Math.min(...pts.map((p) => Math.min(p.bal, p.thr))), hi = Math.max(target, ...pts.map((p) => p.bal));
+  const pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
+  const X = (i) => padL + (i / Math.max(1, pts.length - 1)) * (w - padL - padR), Y = (v) => top + (1 - (v - lo) / (hi - lo)) * (h - top - bot);
+  ctx.font = "10.5px ui-monospace, Menlo, monospace"; ctx.textBaseline = "middle";
+  const step = niceStep(hi - lo, 6);
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) {
+    ctx.strokeStyle = C.grid; ctx.beginPath(); ctx.moveTo(padL, Math.round(Y(v)) + 0.5); ctx.lineTo(w - padR, Math.round(Y(v)) + 0.5); ctx.stroke();
+    ctx.fillStyle = C.dim; ctx.textAlign = "right"; ctx.fillText(money(v / 1000, 1) + "k", padL - 8, Y(v));
+  }
+  const hline = (v, col, dash, label) => {
+    ctx.strokeStyle = col; ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(padL, Y(v)); ctx.lineTo(w - padR, Y(v)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = col; ctx.textAlign = "right"; ctx.fillText(label, w - padR - 4, Y(v) - 9);
+  };
+  hline(target, C.teal, [4, 4], `TARGET ${money(target)}`);
+  hline(start, C.dim, [2, 4], "START");
+  // trailing threshold (steps at each session close)
+  ctx.strokeStyle = C.red; ctx.setLineDash([5, 4]); ctx.beginPath();
+  pts.forEach((p, i) => { const y = Y(p.thr); i ? (ctx.lineTo(X(i), Y(pts[i - 1].thr)), ctx.lineTo(X(i), y)) : ctx.moveTo(X(i), y); });
+  ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = C.red; ctx.textAlign = "left"; ctx.fillText("EOD TRAILING DRAWDOWN", padL + 6, Y(pts[0].thr) + 11);
+  // equity area + line
+  const g = ctx.createLinearGradient(0, top, 0, h - bot);
+  g.addColorStop(0, "rgba(45,212,191,.22)"); g.addColorStop(1, "rgba(45,212,191,0)");
+  ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(X(i), Y(p.bal)) : ctx.moveTo(X(i), Y(p.bal))));
+  ctx.lineTo(X(pts.length - 1), h - bot); ctx.lineTo(X(0), h - bot); ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = C.teal; ctx.lineWidth = 1.8; ctx.beginPath();
+  pts.forEach((p, i) => (i ? ctx.lineTo(X(i), Y(p.bal)) : ctx.moveTo(X(i), Y(p.bal)))); ctx.stroke(); ctx.lineWidth = 1;
+  // outcome marker + month ticks
+  const o = R.outcome;
+  if (o) {
+    const idx = pts.findIndex((p) => p.t && p.t.date === o.date && (o.kind === "pass" ? true : p.bal <= p.thr));
+    const i = o.kind === "pass" ? pts.map((p) => p.t?.date).lastIndexOf(o.date) : idx;
+    if (i > 0) {
+      const col = o.kind === "pass" ? C.teal : C.red;
+      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(X(i), Y(pts[i].bal), 5, 0, Math.PI * 2); ctx.fill();
+      ctx.textAlign = X(i) > w - 120 ? "right" : "left";
+      ctx.fillText(`${o.kind.toUpperCase()} · ${o.date}`, X(i) + (ctx.textAlign === "left" ? 9 : -9), Y(pts[i].bal) - 12);
+    }
+  }
+  ctx.fillStyle = C.dim; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  let lastM = "";
+  pts.forEach((p, i) => { if (!p.t) return; const m = p.t.date.slice(0, 7); if (m !== lastM) { lastM = m; ctx.fillText(new Date(p.t.date + "T12:00:00").toLocaleDateString("en-GB", { month: "short" }).toUpperCase(), X(i), h - bot + 8); } });
+  $("eq-note").textContent = `${pts.length - 1} trades · end ${money(R.bal)}`;
+}
+
+function renderTable(R) {
+  $("tbl").innerHTML = R.trades.map((t, i) => `<tr data-i="${i}" class="${state.selTrade === t ? "sel" : ""}"${t.skipped ? ' style="opacity:.45"' : ""}>
+    <td>${t.date}</td><td>${t.time}</td><td class="${t.side === "Long" ? "pos" : "neg"}">${t.side}</td><td class="n">${t.qty}</td>
+    <td class="n">${fmtPx(t.entry)}</td><td class="n">${fmtPx(t.stop)}</td><td class="n">${fmtPx(t.exit)}</td>
+    <td class="n ${cls(t.R)}">${fmtR(t.R)}</td><td class="n ${cls(t.usd)}">${smoney(t.usd)}</td><td class="note" title="${esc(t.notes)}">${esc(t.notes)}</td></tr>`).join("");
+  document.querySelectorAll("#tbl tr").forEach((tr) => tr.onclick = () => {
+    const t = R.trades[+tr.dataset.i];
+    state.selTrade = t; state.dayDate = t.date;
+    renderDaySelect(R); renderDay(R); renderTable(R);
+    $("chart").scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+}
+
+function renderAll() {
+  const R = state.R = computeRun(state.run);
+  if (!R.trades.length) { $("foot").textContent = "This source has no complete trades (entry, stop and exit are required)."; return; }
+  renderKpis(R); renderRisk(R); renderProgress(R); renderRules(); renderDaySelect(R); renderDay(R); drawEquity(R); renderTable(R);
+  $("mode-pill").innerHTML = `<span class="dot"></span>${R.run.journal ? "Journal" : "Backtest replay"}`;
+  $("foot").innerHTML = `Tick data: Databento GLBX.MDP3 ${esc(D.symbol)} trades with aggressor side · ${D.days.length} sessions · built ${esc(D.generated)} · chart window 08:30–12:30 ET, delta and VWAP from RTH 1-minute bars.<br>
+    P&amp;L uses the estimated round-turn costs in the rules. Pass odds come from ${R.sim ? R.sim.sims.toLocaleString() : 0} challenges made of random real sessions from this source (days with no signal included), max ${rules.plan.max_days} trading days.<br>
+    Rules come from challenge.json; edits on the <a href="app.html">Challenge rules tab</a> are picked up here. Backtests are evidence, not proof — your own journal is the real test.`;
+}
+
+// ---------- wiring ----------
+$("run-sel").innerHTML = runs.map((r, i) => `<option value="${i}">${esc(r.label)}</option>`).join("");
+const savedRun = runs.findIndex((r) => r.id === localStorage.getItem("ndp.run"));
+state.run = runs[savedRun >= 0 ? savedRun : runs.findIndex((r) => r.id === "insample_structural") >= 0 ? runs.findIndex((r) => r.id === "insample_structural") : 0];
+$("run-sel").value = runs.indexOf(state.run);
+$("run-sel").onchange = (e) => { state.run = runs[+e.target.value]; state.dayDate = null; state.selTrade = null; localStorage.setItem("ndp.run", state.run.id); renderAll(); };
+$("only-trades").onchange = (e) => { state.onlyTrades = e.target.checked; renderDaySelect(state.R); renderDay(state.R); };
+$("day-sel").onchange = (e) => { state.dayDate = e.target.value; state.selTrade = null; renderDay(state.R); };
+const stepDay = (k) => {
+  const days = visibleDays(state.R), i = days.indexOf(state.dayDate) + k;
+  if (i >= 0 && i < days.length) { state.dayDate = days[i]; state.selTrade = null; $("day-sel").value = state.dayDate; renderDay(state.R); }
+};
+$("prev").onclick = () => stepDay(-1);
+$("next").onclick = () => stepDay(1);
+document.addEventListener("keydown", (e) => { if (e.target.tagName === "SELECT") return; if (e.key === "ArrowLeft") stepDay(-1); if (e.key === "ArrowRight") stepDay(1); });
+$("chart").addEventListener("mousemove", (e) => {
+  const g = $("chart")._geom; if (!g) return;
+  const r = e.target.getBoundingClientRect(), x = e.clientX - r.left;
+  const m = Math.floor(g.t0 + ((x - g.padL) / (g.w - g.padL - g.padR)) * (g.t1 - g.t0));
+  state.hoverMin = m >= g.t0 && m < g.t1 ? m : null; state.hoverY = e.clientY - r.top;
+  drawChart(state.R); renderLadder(D.days[dayIndex[state.dayDate]]);
+});
+$("chart").addEventListener("mouseleave", () => { state.hoverMin = null; state.hoverY = null; state.hoverPx = null; drawChart(state.R); renderLadder(D.days[dayIndex[state.dayDate]]); });
+$("tape-chart").addEventListener("click", (e) => {
+  const cv = $("tape-chart"), days = cv._days; if (!days) return;
+  const d = days[Math.floor(((e.clientX - cv.getBoundingClientRect().left) / cv.clientWidth) * days.length)];
+  if (!d) return;
+  if (state.onlyTrades && !state.R.byDate[d]) { state.onlyTrades = false; $("only-trades").checked = false; }
+  state.dayDate = d; state.selTrade = null; renderDaySelect(state.R); renderDay(state.R);
+});
+let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { drawChart(state.R); drawEquity(state.R); renderTape(state.R, D.days[dayIndex[state.dayDate]]); }, 120); });
+renderAll();
+</script>
+</body>
+</html>

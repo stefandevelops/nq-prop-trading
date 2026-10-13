@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trading Desk</title>
+<style>
+:root {
+  --bg: #0d0d0e; --card: #141415; --card2: #1a1a1c; --line: #262629; --line2: #333337;
+  --text: #ededee; --muted: #8d8d93; --dim: #5c5c62;
+  --teal: #2dd4bf; --teal-d: rgba(45, 212, 191, .13); --red: #f26d6d; --red-d: rgba(242, 109, 109, .13);
+  --purple: #a78bfa; --amber: #f5b94a;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 var(--sans); min-height: 100vh; }
+body::before { content: ""; position: fixed; top: -25vh; right: -15vw; width: 75vw; height: 80vh; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(139, 92, 246, .11), transparent); }
+header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 14px; padding: 12px 22px;
+  background: rgba(13, 13, 14, .92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; }
+.logo { width: 28px; height: 28px; border: 1px solid var(--line2); border-radius: 8px; display: grid; place-items: center; background: var(--card); }
+.brand small { font: 500 10px var(--mono); color: var(--purple); border: 1px solid rgba(167, 139, 250, .35); border-radius: 5px; padding: 2px 5px; letter-spacing: .1em; }
+nav { display: flex; gap: 4px; }
+nav button { background: transparent; border: 1px solid transparent; color: var(--muted); }
+nav button.on { color: var(--text); border-color: var(--line2); background: var(--card2); }
+.spacer { flex: 1; }
+.clock { font: 12px var(--mono); color: var(--muted); text-align: right; line-height: 1.35; }
+.clock b { color: var(--text); font-weight: 500; }
+.wrap { position: relative; z-index: 1; max-width: 1500px; margin: 0 auto; padding: 18px 22px 48px; }
+.tab { display: none; } .tab.on { display: block; }
+.frame { width: 100%; height: calc(100vh - 58px); border: 0; display: block; }
+.grid { display: grid; gap: 14px; margin-bottom: 14px; }
+.g2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
+.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+.card-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px; }
+.card-h h2 { margin: 0; font-size: 14px; font-weight: 600; }
+.label { font: 500 11px/1.25 var(--mono); text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+.mono { font-family: var(--mono); }
+.muted { color: var(--muted); } .dimc { color: var(--dim); } .pos { color: var(--teal); } .neg { color: var(--red); } .amb { color: var(--amber); }
+.pill { font: 500 10.5px var(--mono); letter-spacing: .09em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, .35); color: var(--teal); background: var(--teal-d); white-space: nowrap; }
+.pill.red { border-color: rgba(242, 109, 109, .4); color: var(--red); background: var(--red-d); }
+.pill.gray { border-color: var(--line2); color: var(--muted); background: transparent; }
+.pill.amber { border-color: rgba(245, 185, 74, .4); color: var(--amber); background: rgba(245, 185, 74, .1); }
+.dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; margin-right: 7px; box-shadow: 0 0 8px currentColor; vertical-align: 1px; }
+select, button, input[type=text], input[type=password], input[type=number] { background: var(--card2); color: var(--text); border: 1px solid var(--line2);
+  border-radius: 8px; padding: 6px 10px; font: 12px var(--mono); }
+button { cursor: pointer; } button:hover { border-color: #4a4a50; } button:disabled { opacity: .5; cursor: default; }
+button.primary { background: var(--teal-d); border-color: rgba(45, 212, 191, .45); color: var(--teal); }
+button.danger { background: var(--red-d); border-color: rgba(242, 109, 109, .45); color: var(--red); }
+a { color: var(--teal); text-decoration: none; }
+table { width: 100%; border-collapse: collapse; font: 12px var(--mono); }
+th { text-align: left; color: var(--muted); font-weight: 500; padding: 6px 8px; border-bottom: 1px solid var(--line); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.r, th.r { text-align: right; }
+tr.price td { color: var(--purple); font-weight: 600; }
+.big { font-size: 26px; font-weight: 600; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.check { font: 12px var(--mono); color: var(--muted); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+pre { background: #0a0a0b; border: 1px solid var(--line); border-radius: 10px; padding: 12px; font: 11.5px/1.5 var(--mono); color: #c9c9cf;
+  white-space: pre-wrap; max-height: 360px; overflow: auto; margin: 0; }
+.status-row { display: grid; grid-template-columns: 150px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); align-items: center; font-size: 13px; }
+.status-row:last-child { border-bottom: 0; }
+.phase-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 12px; }
+.phase-bar div { font: 10.5px var(--mono); color: var(--dim); border-top: 3px solid var(--line2); padding-top: 5px; }
+.phase-bar div.on { color: var(--teal); border-color: var(--teal); }
+.phase-bar div.done { color: var(--muted); border-color: #3c3c42; }
+.signal-box { border-radius: 12px; padding: 14px; border: 1px solid var(--line2); background: var(--card2); }
+.signal-box.long { border-color: rgba(45, 212, 191, .5); background: var(--teal-d); }
+.signal-box.short { border-color: rgba(242, 109, 109, .5); background: var(--red-d); }
+.signal-box.watch { border-color: rgba(245, 185, 74, .45); background: rgba(245, 185, 74, .08); }
+.md { font-size: 13.5px; line-height: 1.55; }
+.md h1 { font-size: 18px; margin: 0 0 10px; } .md h2 { font-size: 15px; margin: 22px 0 8px; color: var(--purple); } .md h3 { font-size: 14px; margin: 16px 0 6px; }
+.md table { margin: 8px 0 12px; font-size: 12px; } .md code { font: 12px var(--mono); background: var(--card2); padding: 1px 5px; border-radius: 4px; }
+.md ul, .md ol { padding-left: 20px; margin: 6px 0; } .md li { margin: 3px 0; }
+.md li.task { list-style: none; margin-left: -20px; }
+.md li.task label { display: flex; gap: 9px; cursor: pointer; } .md li.task input { margin-top: 4px; accent-color: var(--teal); }
+.md li.task input:checked + span { color: var(--dim); text-decoration: line-through; }
+.md blockquote { border-left: 3px solid var(--line2); margin: 8px 0; padding: 4px 12px; color: var(--muted); }
+.md hr { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
+.doc { max-width: 980px; margin: 0 auto; }
+.thumbs img { height: 54px; border-radius: 6px; border: 1px solid var(--line2); margin-right: 4px; }
+@media (max-width: 1100px) { .g2, .g3 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="logo">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#a78bfa" stroke-width="1.6"><path d="M1 12l4-4 3 3 6-7"/></svg>
+  </div>Trading Desk <small>NQ</small></div>
+  <nav id="nav">
+    <button data-tab="today" class="on">Today</button>
+    <button data-tab="signals">Signals</button>
+    <button data-tab="journal">Journal &amp; simulator</button>
+    <button data-tab="dashboard">Dashboard</button>
+    <button data-tab="playbook">Playbook</button>
+  </nav>
+  <div class="spacer"></div>
+  <span id="agent-pill" class="pill gray">Agent off</span>
+  <span id="phase-pill" class="pill gray">—</span>
+  <div class="clock"><div>NY <b id="clk-et">--:--:--</b></div><div>UK <b id="clk-uk">--:--:--</b></div></div>
+</header>
+
+<section class="tab on" id="tab-today"><div class="wrap">
+  <div class="grid g3">
+    <div class="card">
+      <div class="card-h"><h2>Session</h2><span class="label" id="acct">—</span></div>
+      <div class="big" id="phase-name">—</div>
+      <div class="muted" id="phase-next" style="margin-top:4px">—</div>
+      <div class="phase-bar" id="phase-bar"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Plan</h2><span class="label">MNQ sizes</span></div>
+      <div id="plan"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Latest signal</h2><a href="#" data-goto="signals" class="label">Signals →</a></div>
+      <div id="today-signal" class="muted">No readings today.</div>
+    </div>
+  </div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="card-h"><h2>Levels</h2>
+        <button id="levels-btn" title="Downloads ~35 days of NQ 1-min bars from Databento (about $0.13 of credit; stops if the quote is above $0.25)">Fetch today's levels (~$0.13)</button>
+      </div>
+      <div id="levels"><p class="muted">No levels yet.</p></div>
+      <details style="margin-top:10px"><summary class="label" style="cursor:pointer">Script output</summary><pre id="levels-out" style="margin-top:8px">—</pre></details>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Daily checklist</h2><button id="check-reset">Untick all</button></div>
+      <div class="md" id="checklist">Loading…</div>
+    </div>
+  </div>
+</div></section>
+
+<section class="tab" id="tab-signals"><div class="wrap">
+  <div class="grid g3">
+    <div class="card">
+      <div class="card-h"><h2>Setup</h2><button id="refresh">Re-check</button></div>
+      <div id="setup"></div>
+      <details id="key-box" style="margin-top:10px"><summary class="label" style="cursor:pointer">Add an AI key (saved to .env, never shown again)</summary>
+        <div class="row" style="margin-top:10px">
+          <select id="key-name"><option value="GEMINI_API_KEY">Gemini (free tier)</option><option value="OPENAI_API_KEY">OpenAI</option></select>
+          <input id="key-value" type="password" placeholder="paste key" style="flex:1;min-width:140px" autocomplete="off">
+          <button id="key-save" class="primary">Save</button>
+        </div>
+        <p class="muted" style="font-size:12px;margin:8px 0 0">Free Gemini key: <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>.
+          Or a local model: <code>brew install ollama && ollama pull qwen2.5vl:7b</code>, then run <code>ollama serve</code>.</p>
+      </details>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Screen agent</h2><span class="label">alerts only, never places orders</span></div>
+      <div class="row" style="margin-bottom:10px">
+        <label class="label" style="width:70px">Model</label>
+        <select id="opt-provider"><option value="">auto</option><option value="gemini">Gemini</option><option value="ollama">Ollama (local)</option><option value="openai">OpenAI-compatible</option></select>
+        <input id="opt-model" type="text" placeholder="model (optional)" style="width:150px">
+      </div>
+      <div class="row" style="margin-bottom:10px">
+        <label class="label" style="width:70px">Windows</label>
+        <input id="opt-apps" type="text" value="Bookmap,DeepCharts" style="width:200px">
+        <label class="label">every</label><input id="opt-interval" type="number" value="20" min="5" style="width:64px"><span class="muted">s</span>
+      </div>
+      <div class="row" style="margin-bottom:14px">
+        <label class="check"><input type="checkbox" id="opt-replay"> Replay (any time)</label>
+        <label class="check"><input type="checkbox" id="opt-anytime"> Outside 9:25–13:05</label>
+        <label class="check"><input type="checkbox" id="opt-watch"> Notify on watch</label>
+        <label class="check"><input type="checkbox" id="opt-save"> Keep all screenshots</label>
+      </div>
+      <div class="row"><button class="primary" id="start">Start agent</button><button class="danger" id="stop">Stop</button><span class="muted mono" id="agent-msg"></span></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Latest signal</h2><span class="label" id="sig-count"></span></div>
+      <div id="latest" class="muted">No readings today.</div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-h"><h2>Readings today</h2>
+      <div class="row"><label class="check"><input type="checkbox" id="only-signals" checked> Hide "none"</label><input type="text" id="day" style="width:110px" placeholder="YYYY-MM-DD"></div>
+    </div>
+    <div style="overflow:auto;max-height:520px"><table id="feed"></table></div>
+  </div>
+  <div class="card"><div class="card-h"><h2>Agent console</h2></div><pre id="console">—</pre></div>
+</div></section>
+
+<section class="tab" id="tab-journal"><iframe class="frame" data-src="/app.html"></iframe></section>
+<section class="tab" id="tab-dashboard"><iframe class="frame" data-src="/dashboard.html"></iframe></section>
+<section class="tab" id="tab-playbook"><div class="wrap"><div class="card doc"><div class="md" id="playbook">Loading…</div></div></div></section>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const api = (path, body) => fetch(path, body === undefined ? {} : {
+  method: "POST", headers: { "Content-Type": "application/json", "X-Desk": "1" }, body: JSON.stringify(body),
+}).then((r) => r.json());
+let S = null, R = [];
+
+// ---------------------------------------------------------------- tabs
+function show(tab) {
+  document.querySelectorAll("#nav button").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
+  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("on", t.id === "tab-" + tab));
+  const f = document.querySelector(`#tab-${tab} iframe`);
+  if (f && !f.src) f.src = f.dataset.src;
+  location.hash = tab;
+}
+$("nav").onclick = (e) => e.target.dataset.tab && show(e.target.dataset.tab);
+document.querySelectorAll("[data-goto]").forEach((a) => (a.onclick = (e) => { e.preventDefault(); show(a.dataset.goto); }));
+if (location.hash.slice(1)) show(location.hash.slice(1));
+
+// ---------------------------------------------------------------- markdown
+function inline(s) {
+  return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+    .replace(/(^|[^*])\*([^*]+)\*/g, "$1<i>$2</i>").replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+function md(text, taskKey) {
+  const lines = text.split("\n"), out = [];
+  let i = 0, task = 0, list = null;
+  const closeList = () => { if (list) { out.push(`</${list}>`); list = null; } };
+  while (i < lines.length) {
+    const l = lines[i];
+    if (l.startsWith("```")) {
+      closeList(); const buf = [];
+      for (i++; i < lines.length && !lines[i].startsWith("```"); i++) buf.push(lines[i]);
+      out.push(`<pre>${esc(buf.join("\n"))}</pre>`); i++; continue;
+    }
+    if (/^\|/.test(l)) {
+      closeList(); const rows = [];
+      for (; i < lines.length && /^\|/.test(lines[i]); i++) rows.push(lines[i]);
+      const cells = (r) => r.replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+      const body = rows.filter((r, k) => k !== 1 || !/^[\s|:-]+$/.test(r));
+      out.push("<table><tr>" + cells(body[0]).map((c) => `<th>${inline(c)}</th>`).join("") + "</tr>" +
+        body.slice(1).map((r) => "<tr>" + cells(r).map((c) => `<td>${inline(c)}</td>`).join("") + "</tr>").join("") + "</table>");
+      continue;
+    }
+    let m;
+    if ((m = l.match(/^(#{1,3})\s+(.*)/))) { closeList(); out.push(`<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`); }
+    else if ((m = l.match(/^\s*[-*]\s+\[([ x])\]\s+(.*)/))) {
+      if (list !== "ul") { closeList(); out.push("<ul>"); list = "ul"; }
+      const id = `${taskKey}-${task++}`;
+      out.push(`<li class="task"><label><input type="checkbox" data-task="${id}"><span>${inline(m[2])}</span></label></li>`);
+    }
+    else if ((m = l.match(/^\s*[-*]\s+(.*)/))) { if (list !== "ul") { closeList(); out.push("<ul>"); list = "ul"; } out.push(`<li>${inline(m[1])}</li>`); }
+    else if ((m = l.match(/^\s*\d+\.\s+(.*)/))) { if (list !== "ol") { closeList(); out.push("<ol>"); list = "ol"; } out.push(`<li>${inline(m[1])}</li>`); }
+    else if (/^---+\s*$/.test(l)) { closeList(); out.push("<hr>"); }
+    else if ((m = l.match(/^>\s?(.*)/))) { closeList(); out.push(`<blockquote>${inline(m[1])}</blockquote>`); }
+    else if (l.trim()) { closeList(); out.push(`<p>${inline(l)}</p>`); }
+    else closeList();
+    i++;
+  }
+  closeList();
+  return out.join("\n");
+}
+
+// ---------------------------------------------------------------- clock and session phase
+const PHASES = [["Pre-market", 0], ["Opening range", 570], ["ORB active", 585], ["ORB + IB active", 630], ["No new entries", 780], ["Closed", 955]];
+function etParts(d = new Date()) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "America/New_York", hour12: false, weekday: "short",
+    year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }).formatToParts(d).map((x) => [x.type, x.value]));
+  return { ...p, min: +p.hour * 60 + +p.minute, date: `${p.year}-${p.month}-${p.day}`, weekend: ["Sat", "Sun"].includes(p.weekday) };
+}
+const hm = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+function tick() {
+  const now = new Date(), et = etParts(now);
+  $("clk-et").textContent = `${et.hour}:${et.minute}:${et.second}`;
+  $("clk-uk").textContent = now.toLocaleTimeString("en-GB", { timeZone: "Europe/London", hour12: false });
+  let k = PHASES.length - 1;
+  while (k > 0 && et.min < PHASES[k][1]) k--;
+  if (et.weekend) k = 5;
+  const name = et.weekend ? "Weekend" : PHASES[k][0];
+  const live = !et.weekend && (k === 2 || k === 3);
+  $("phase-pill").className = "pill " + (live ? "" : k === 1 || k === 4 ? "amber" : "gray");
+  $("phase-pill").innerHTML = (live ? '<span class="dot"></span>' : "") + name;
+  $("phase-name").textContent = name;
+  const next = PHASES.find((p) => p[1] > et.min && p[1] > 0);
+  const ukOf = (m) => { const d = new Date(now.getTime() + (m - et.min) * 60000 - +et.second * 1000);
+    return d.toLocaleTimeString("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit" }); };
+  $("phase-next").textContent = et.weekend ? "Market opens Sunday 18:00 ET (Globex); RTH Monday 9:30 ET."
+    : next ? `${next[0]} at ${hm(next[1])} ET (${ukOf(next[1])} UK), in ${Math.floor((next[1] - et.min - 1) / 60)}h ${(next[1] - et.min - 1) % 60}m ${60 - +et.second}s`
+    : "Session over. Log today's trades in the journal.";
+  $("phase-bar").innerHTML = PHASES.slice(1).map((p, j) => `<div class="${et.weekend ? "" : j + 1 === k ? "on" : j + 1 < k ? "done" : ""}">${hm(p[1])} ${p[0]}</div>`).join("");
+}
+setInterval(tick, 1000); tick();
+
+// ---------------------------------------------------------------- today
+function renderPlan() {
+  const p = S.plan, cost = S.mnq_cost;
+  const stops = [30, 50, 60, 80, 100, 120];
+  const lv = S.levels;
+  $("acct").textContent = S.account;
+  $("plan").innerHTML = `<div class="row" style="margin-bottom:10px"><span class="pill">$${p.risk_per_trade} risk</span>
+      <span class="pill gray">max ${p.max_trades_per_day} trades</span><span class="pill gray">stop after ${p.max_losses_per_day} losers / -$${p.daily_loss_stop}</span>
+      <span class="pill gray">goal +$${p.daily_profit_goal}</span></div>
+    <table><tr><th>Stop</th>${stops.map((s) => `<th class="r">${s}</th>`).join("")}</tr>
+    <tr><td>MNQ</td>${stops.map((s) => { const q = Math.floor(p.risk_per_trade / (s * 2 + cost)); return `<td class="r ${q ? "" : "neg"}">${q}</td>`; }).join("")}</tr></table>
+    <div class="dimc mono" style="font-size:11px;margin-top:8px">contracts = risk / (stop × $2 + $${cost.toFixed(2)})${lv ? ` · typical 15m range ${lv.median_opening_range_15m} pts, IB ${lv.median_initial_balance} pts` : ""}</div>`;
+}
+function renderLevels() {
+  const lv = S.levels;
+  if (!lv) { $("levels").innerHTML = '<p class="muted">No levels yet. Fetch them before the open.</p>'; return; }
+  const today = etParts().date, stale = lv.date !== today;
+  const rows = Object.entries(lv.levels).map(([k, v]) => [k, v]);
+  rows.push([">> last price", lv.last_price]);
+  rows.sort((a, b) => b[1] - a[1]);
+  $("levels").innerHTML = `<div class="row" style="margin-bottom:10px">
+      <span class="pill ${stale ? "amber" : ""}">${stale ? "From " + lv.date : "Today"}</span>
+      <span class="pill gray">${esc(lv.context)}</span><span class="dimc mono" style="font-size:11px">data to ${esc(lv.last_bar_et)} ET</span></div>
+    <table><tr><th>Level</th><th class="r">Price</th><th class="r">vs last</th></tr>${rows.map(([k, v]) =>
+      `<tr class="${k.startsWith(">>") ? "price" : ""}"><td>${esc(k)}</td><td class="r">${v.toFixed(2)}</td><td class="r ${v > lv.last_price ? "pos" : v < lv.last_price ? "neg" : ""}">${k.startsWith(">>") ? "" : (v - lv.last_price >= 0 ? "+" : "") + (v - lv.last_price).toFixed(2)}</td></tr>`).join("")}</table>`;
+}
+$("levels-btn").onclick = async () => {
+  if (!confirm("Download ~35 days of NQ 1-minute bars from Databento? About $0.13 of credit (it stops if the quote is above $0.25).")) return;
+  const b = $("levels-btn"); b.disabled = true; b.textContent = "Fetching…";
+  try { const r = await api("/api/levels", {}); $("levels-out").textContent = r.output; await refresh(); }
+  catch (e) { $("levels-out").textContent = String(e); }
+  b.disabled = false; b.textContent = "Fetch today's levels (~$0.13)";
+};
+
+const CHECK_KEY = () => "desk.checklist." + etParts().date;
+async function loadDocs() {
+  const c = await api("/api/doc?name=checklist");
+  $("checklist").innerHTML = md(c.text.replace(/^# .*\n/, ""), "c");
+  const saved = JSON.parse(localStorage.getItem(CHECK_KEY()) || "{}");
+  $("checklist").querySelectorAll("input[data-task]").forEach((x) => {
+    x.checked = !!saved[x.dataset.task];
+    x.onchange = () => { saved[x.dataset.task] = x.checked; localStorage.setItem(CHECK_KEY(), JSON.stringify(saved)); };
+  });
+  const p = await api("/api/doc?name=playbook");
+  $("playbook").innerHTML = md(p.text, "p");
+}
+$("check-reset").onclick = () => { localStorage.removeItem(CHECK_KEY()); loadDocs(); };
+
+// ---------------------------------------------------------------- signals
+const ok = (b, yes, no) => `<span class="pill ${b ? "" : "red"}">${b ? yes : no}</span>`;
+function renderSetup() {
+  const k = S.keys, model = k.GEMINI_API_KEY ? "Gemini key saved" : k.OPENAI_API_KEY ? "OpenAI key saved"
+    : S.ollama_running ? (S.ollama_models.length ? "Ollama: " + S.ollama_models.join(", ") : "Ollama running, no model pulled") : null;
+  $("setup").innerHTML = `
+    <div class="status-row"><span class="label">Screen recording</span>${ok(S.screen_permission, "Allowed", "Not allowed")}</div>
+    <div class="status-row"><span class="label">Chart windows</span><span>${S.windows.length ? S.windows.map((w) => `<span class="pill" style="margin:0 4px 4px 0;display:inline-block">${esc(w)}</span>`).join("")
+      : '<span class="pill amber">None visible</span> <span class="muted" style="font-size:12px">open Bookmap / DeepCharts on screen</span>'}</span></div>
+    <div class="status-row"><span class="label">AI model</span><span>${model ? `<span class="pill">${esc(model)}</span>` : '<span class="pill red">None set up</span>'}</span></div>
+    <div class="status-row"><span class="label">Databento key</span>${ok(S.keys.DATABENTO_API_KEY, "Saved", "Missing")}</div>`;
+  if (!model && !renderSetup.opened) { $("key-box").open = true; renderSetup.opened = true; }
+}
+$("key-save").onclick = async () => {
+  const r = await api("/api/key", { name: $("key-name").value, value: $("key-value").value });
+  $("key-value").value = "";
+  $("agent-msg").textContent = r.ok ? "Key saved." : r.error;
+  refresh();
+};
+function sizeOf(d) {
+  if (typeof d.price !== "number" || typeof d.stop !== "number" || d.price === d.stop) return "";
+  const pts = Math.abs(d.price - d.stop), q = Math.floor(S.plan.risk_per_trade / (pts * 2 + S.mnq_cost));
+  return `${pts.toFixed(0)} pt stop → ${q} MNQ`;
+}
+function signalBox(d) {
+  if (!d) return '<span class="muted">No readings today.</span>';
+  const t = d.time.slice(11, 19), sz = sizeOf(d);
+  return `<div class="signal-box ${d.signal}">
+    <div class="row" style="justify-content:space-between"><span class="big ${d.signal === "long" ? "pos" : d.signal === "short" ? "neg" : d.signal === "watch" ? "amb" : "muted"}">${d.signal.toUpperCase()}</span>
+      <span class="mono muted">${t} ET · conf ${d.confidence ?? "?"}</span></div>
+    <div style="margin:6px 0">${esc(d.setup || "")} ${d.price != null ? "@ " + d.price : ""} ${d.stop != null ? "· stop " + d.stop : ""} ${d.target != null ? "· target " + d.target : ""}</div>
+    ${sz ? `<div class="mono" style="font-size:12px">${sz}</div>` : ""}
+    <div class="muted" style="font-size:12.5px;margin-top:6px">${esc(d.trigger || d.notes || "")}</div>
+    <div class="row" style="margin-top:8px"><span class="pill gray">delta ${esc(d.delta || "?")}</span><span class="pill gray">big trades ${esc(d.big_trades || "?")}</span>
+      <span class="pill gray">liquidity ${esc(d.liquidity || "?")}</span><span class="pill ${d.confirm === "yes" ? "" : d.confirm === "partial" ? "amber" : "gray"}">confirm ${esc(d.confirm || "?")}</span></div></div>`;
+}
+function renderFeed(day) {
+  const only = $("only-signals").checked;
+  const rows = R.filter((d) => !only || d.signal !== "none").slice().reverse();
+  const latest = [...R].reverse().find((d) => d.signal !== "none") || R[R.length - 1];
+  $("latest").innerHTML = signalBox(latest);
+  $("today-signal").innerHTML = signalBox(latest);
+  $("sig-count").textContent = `${R.filter((d) => d.signal === "long" || d.signal === "short").length} signals · ${R.length} readings`;
+  $("feed").innerHTML = `<tr><th>Time</th><th>Signal</th><th>Setup</th><th class="r">Conf</th><th>Confirm</th><th class="r">Price</th><th class="r">Stop</th><th class="r">Target</th><th>Size</th><th>What it saw</th><th>Shots</th></tr>` +
+    (rows.length ? rows.map((d) => {
+      const shots = d.screenshots ? [0, 1, 2].map((i) => `/signals/log/${day}/${d.screenshots.replace("*", i)}`) : [];
+      return `<tr><td>${d.time.slice(11, 19)}</td><td class="${d.signal === "long" ? "pos" : d.signal === "short" ? "neg" : d.signal === "watch" ? "amb" : "dimc"}">${d.signal}${d.alerted ? " 🔔" : ""}</td>
+        <td>${esc(d.setup || "")}</td><td class="r">${d.confidence ?? ""}</td><td>${esc(d.confirm || "")}</td><td class="r">${d.price ?? ""}</td><td class="r">${d.stop ?? ""}</td><td class="r">${d.target ?? ""}</td>
+        <td>${sizeOf(d)}</td><td style="font-family:var(--sans);max-width:420px">${esc(d.trigger || "")}<div class="dimc">${esc(d.notes || "")}</div></td>
+        <td class="thumbs">${shots.map((s) => `<a href="${s}" target="_blank"><img src="${s}" onerror="this.parentNode.remove()"></a>`).join("")}</td></tr>`;
+    }).join("") : `<tr><td colspan="11" class="muted">Nothing yet.</td></tr>`);
+}
+async function loadReadings() {
+  const day = $("day").value.trim() || etParts().date;
+  const r = await api("/api/readings?day=" + encodeURIComponent(day));
+  R = r.readings || [];
+  $("console").textContent = r.console || "—";
+  renderFeed(r.day || day);
+}
+$("only-signals").onchange = () => renderFeed($("day").value.trim() || etParts().date);
+$("day").onchange = loadReadings;
+
+const OPTS_KEY = "desk.agentOpts";
+const optIds = { provider: "opt-provider", model: "opt-model", apps: "opt-apps", interval: "opt-interval", replay: "opt-replay", anytime: "opt-anytime", watch_alerts: "opt-watch", save_all: "opt-save" };
+function readOpts() { return Object.fromEntries(Object.entries(optIds).map(([k, id]) => [k, $(id).type === "checkbox" ? $(id).checked : $(id).value])); }
+(function restoreOpts() {
+  const o = JSON.parse(localStorage.getItem(OPTS_KEY) || "{}");
+  for (const [k, id] of Object.entries(optIds)) if (k in o) $(id).type === "checkbox" ? ($(id).checked = o[k]) : ($(id).value = o[k]);
+})();
+$("start").onclick = async () => {
+  const o = readOpts(); localStorage.setItem(OPTS_KEY, JSON.stringify(o));
+  const r = await api("/api/agent/start", o); $("agent-msg").textContent = r.result; refresh();
+};
+$("stop").onclick = async () => { const r = await api("/api/agent/stop", {}); $("agent-msg").textContent = r.result; refresh(); };
+$("refresh").onclick = () => refresh();
+
+// ---------------------------------------------------------------- polling
+async function refresh() {
+  try { S = await api("/api/status"); } catch { $("agent-pill").className = "pill red"; $("agent-pill").textContent = "Server offline"; return; }
+  renderPlan(); renderLevels(); renderSetup();
+  $("agent-pill").className = "pill " + (S.agent_running ? "" : "gray");
+  $("agent-pill").innerHTML = S.agent_running ? '<span class="dot"></span>Agent on' : "Agent off";
+  $("start").disabled = S.agent_running; $("stop").disabled = !S.agent_running;
+}
+refresh(); loadReadings(); loadDocs();
+setInterval(refresh, 10000);
+setInterval(loadReadings, 3000);
+</script>
+</body>
+</html>
